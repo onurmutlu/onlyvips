@@ -1,2 +1,2 @@
-# backend-api
-API sunucusu. Stars, görev ve içerik işlemleri için EC2 üzerinde Docker ile çalışacak.
+# OnlyVips Backend API
+Bu servis görevler, yıldızlar (Stars), rozetler ve kullanıcı profili API'lerini içerir.
