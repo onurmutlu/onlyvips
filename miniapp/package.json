@@ -12,6 +12,7 @@
   },
 "devDependencies": {
   "vite": "4.5.13",
+  "@vitejs/plugin-react": "^4.0.0",
   "unocss": "^0.56.0"
 }
 
