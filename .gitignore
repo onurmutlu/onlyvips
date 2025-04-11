@@ -5,3 +5,4 @@ node_modules/
 dist/
 build/
 .env.*
+miniapp/.DS_Store
