@@ -1,19 +1,36 @@
 import { useEffect, useState } from "react";
 
 export default function App() {
-  const [user, setUser] = useState<any>(null);
-
-  const viralTasks = [{'title': 'Yeni üye davet et', 'reward': '🎖️ Rozet'}, {'title': "DM'den tanıtım mesajı gönder", 'reward': '+15 XP'}, {'title': '5 farklı grupta botu paylaş', 'reward': '+20 XP'}, {'title': 'Show linkini arkadaşlarına yolla', 'reward': '+10 XP'}, {'title': 'Grubuna MiniApp linkini sabitle', 'reward': '🎖️ Rozet'}, {'title': 'VIP tanıtım postunu 3 grupta paylaş', 'reward': '+25 XP'}, {'title': 'Görev çağrısını 10 kişiye gönder', 'reward': '+30 XP'}, {'title': 'Botu kullanan bir arkadaş davet et', 'reward': '+10 XP'}];
-
+  const [uid, setUid] = useState("demo123"); // fallback UID
   useEffect(() => {
-    if (typeof window !== "undefined" && window.Telegram && window.Telegram.WebApp) {
+    if (typeof window !== "undefined" && window.Telegram && window.Telegram?.WebApp) {
+
       const tg = window.Telegram.WebApp;
       tg.ready();
       tg.expand();
+
+      const user = window.Telegram.WebApp.initDataUnsafe?.user;
+      if (user) {
+        console.log("✅ Telegram UID:", user.id);
+        setUid(user.id.toString());
+      } else {
+        console.warn("⚠️ Telegram initData gelmedi. Demo UID kullanılacak.");
+      }
+
+
   
       const telegramUser = tg.initDataUnsafe?.user;
-      setUser(telegramUser);
-  
+      const [user, setUser] = useState(null);
+     
+      const viralTasks = [{'title': 'Yeni üye davet et', 'reward': '🎖️ Rozet'}, {'title': "DM'den tanıtım mesajı gönder", 'reward': '+15 XP'}, {'title': '5 farklı grupta botu paylaş', 'reward': '+20 XP'}, {'title': 'Show linkini arkadaşlarına yolla', 'reward': '+10 XP'}, {'title': 'Grubuna MiniApp linkini sabitle', 'reward': '🎖️ Rozet'}, {'title': 'VIP tanıtım postunu 3 grupta paylaş', 'reward': '+25 XP'}, {'title': 'Görev çağrısını 10 kişiye gönder', 'reward': '+30 XP'}, {'title': 'Botu kullanan bir arkadaş davet et', 'reward': '+10 XP'}];
+
+      
+      if (telegramUser) {
+        setUser(telegramUser);
+        setUid(telegramUser.id.toString()); // UID string olarak kullanılır
+      } else {
+        console.warn("⚠️ Telegram initData gelmedi, demo123 kullanılacak.");
+      }
       // Konumu backend'e gönder
       if ("geolocation" in navigator && telegramUser?.id) {
         navigator.geolocation.getCurrentPosition(

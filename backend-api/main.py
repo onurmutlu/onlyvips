@@ -6,7 +6,7 @@ app = FastAPI()
 # CORS ayarı
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://arayis-evreni.siyahkare.com", "https://arayis-evreni.vercel.app", "http://localhost:5173"],
+    allow_origins=["https://arayis-evreni.siyahkare.com", "https://*.vercel.app", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
