@@ -1,0 +1,11 @@
+{
+  "name": "AJAN X",
+  "symbol": "AJX",
+  "description": "Görev odaklı Telegram MiniApp oyunu için özel ödül tokenidir.",
+  "decimals": 9,
+  "image": "https://siyahkare.com/images/ajx-logo.png",
+  "social": {
+    "website": "https://siyahkare.com",
+    "telegram": "https://t.me/arayisevreni"
+  }
+}
