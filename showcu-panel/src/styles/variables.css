@@ -1,0 +1,44 @@
+:root {
+  /* Ana Renkler - Erotik Pembe Tema */
+  --primary: #FF2E93;
+  --primary-light: #FF8DC7;
+  --primary-dark: #C6006D;
+  --secondary: #470044;
+  --accent: #FFA3D7;
+  
+  /* Arkaplan Tonları */
+  --bg-main: #1D0820;
+  --bg-card: #2D0D31;
+  --bg-light: #FFFAF8;
+  
+  /* Metin Renkleri */
+  --text-dark: #1D0820;
+  --text-light: #FFFFFF;
+  --text-muted: #D3A7C7;
+  
+  /* Diğer Renkler */
+  --success: #38CB89;
+  --warning: #FFAB2D;
+  --error: #FF5C5C;
+  --info: #5B93FF;
+  
+  /* Border ve Gölgeler */
+  --border-color: rgba(255, 46, 147, 0.3);
+  --shadow-sm: 0 2px 8px rgba(255, 46, 147, 0.2);
+  --shadow-md: 0 4px 12px rgba(255, 46, 147, 0.25);
+  --shadow-lg: 0 8px 24px rgba(255, 46, 147, 0.3);
+  
+  /* Yuvarlak Köşeler */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+  
+  /* Geçişler */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  
+  /* Gradyanlar */
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, #FF7EC1 100%);
+  --gradient-dark: linear-gradient(135deg, #1D0820 0%, #2D0D31 100%);
+} 

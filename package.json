@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "@types/react": "^19.1.2",
+    "@types/react-router-dom": "^5.3.3",
+    "@types/telegram-web-app": "^7.10.1"
+  }
+}
