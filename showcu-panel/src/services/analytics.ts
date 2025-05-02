@@ -1,53 +1,80 @@
 import { api } from './api';
 
 export interface AnalyticsData {
-  totalViews: number;
+  totalUsers: number;
   totalSubscribers: number;
   totalRevenue: number;
-  contentViews: {
+  activePackages: number;
+  totalContent: number;
+  monthlyRevenue: {
+    month: string;
+    revenue: number;
+  }[];
+  topPackages: {
+    id: string;
+    name: string;
+    subscribers: number;
+    revenue: number;
+  }[];
+  topContent: {
     id: string;
     title: string;
     views: number;
     revenue: number;
   }[];
-  subscriberGrowth: {
-    date: string;
-    count: number;
-  }[];
-  revenueByDate: {
-    date: string;
-    amount: number;
-  }[];
+}
+
+export interface AnalyticsOverview {
+  totalViews: number;
+  totalSubscribers: number;
+  totalRevenue: number;
+  recentContent: Array<{
+    id: string;
+    title: string;
+    views: number;
+    revenue: number;
+  }>;
 }
 
 export const analyticsService = {
-  async getOverview(): Promise<AnalyticsData> {
-    const response = await api.get('/analytics/overview');
+  getDashboard: async (): Promise<AnalyticsData> => {
+    const { data } = await api.get('/api/analytics/dashboard');
+    return data;
+  },
+
+  getRevenue: async (startDate: string, endDate: string): Promise<any> => {
+    const { data } = await api.get('/api/analytics/revenue', {
+      params: { startDate, endDate }
+    });
+    return data;
+  },
+
+  getSubscribers: async (startDate: string, endDate: string): Promise<any> => {
+    const { data } = await api.get('/api/analytics/subscribers', {
+      params: { startDate, endDate }
+    });
+    return data;
+  },
+
+  getContent: async (startDate: string, endDate: string): Promise<any> => {
+    const { data } = await api.get('/api/analytics/content', {
+      params: { startDate, endDate }
+    });
+    return data;
+  },
+
+  getOverview: async (): Promise<AnalyticsOverview> => {
+    const response = await api.get('/api/analytics/overview');
     return response.data;
   },
 
-  async getContentAnalytics(contentId: string): Promise<{
-    views: number;
-    revenue: number;
-    viewsByDate: { date: string; count: number }[];
-  }> {
-    const response = await api.get(`/analytics/content/${contentId}`);
+  getContentAnalytics: async (contentId: string) => {
+    const response = await api.get(`/api/analytics/content/${contentId}`);
     return response.data;
   },
 
-  async getSubscriberAnalytics(): Promise<{
-    total: number;
-    growth: { date: string; count: number }[];
-  }> {
-    const response = await api.get('/analytics/subscribers');
-    return response.data;
-  },
-
-  async getRevenueAnalytics(): Promise<{
-    total: number;
-    byDate: { date: string; amount: number }[];
-  }> {
-    const response = await api.get('/analytics/revenue');
+  getRevenueAnalytics: async (period: 'day' | 'week' | 'month' | 'year') => {
+    const response = await api.get(`/api/analytics/revenue?period=${period}`);
     return response.data;
   }
 }; 

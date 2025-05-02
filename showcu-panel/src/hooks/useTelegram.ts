@@ -1,75 +1,58 @@
-import { create } from 'zustand';
-import { telegramService } from '../services';
+import { useEffect, useState } from 'react';
+import { telegramService } from '../services/telegramService';
 
-interface TelegramState {
-  user: {
-    id: number;
-    first_name: string;
-    last_name?: string;
-    username?: string;
-    photo_url?: string;
-    auth_date: number;
-    hash: string;
-  } | null;
+export interface TelegramState {
+  isMiniApp: boolean;
   theme: 'light' | 'dark';
-  platform: string;
-  viewport: {
-    height: number;
-    width: number;
-  };
-  init: () => void;
-  showAlert: (message: string, callback?: () => void) => void;
-  showConfirm: (message: string, callback?: (isConfirmed: boolean) => void) => void;
-  showPopup: (params: {
-    title?: string;
-    message: string;
-    buttons?: Array<{
-      id: string;
-      type?: 'default' | 'ok' | 'close' | 'cancel' | 'destructive';
-      text: string;
-    }>;
-  }, callback?: (buttonId: string) => void) => void;
-  expand: () => void;
-  close: () => void;
+  user: any;
+  viewportHeight: number;
+  viewportStableHeight: number;
 }
 
-export const useTelegram = create<TelegramState>((set) => ({
-  user: null,
-  theme: 'light',
-  platform: '',
-  viewport: {
-    height: 0,
-    width: 0,
-  },
-  init: () => {
-    telegramService.init();
-    const user = telegramService.getUser();
+export const useTelegram = () => {
+  const [state, setState] = useState<TelegramState>({
+    isMiniApp: false,
+    theme: 'light',
+    user: null,
+    viewportHeight: 0,
+    viewportStableHeight: 0,
+  });
+
+  useEffect(() => {
+    const isMiniApp = telegramService.isMiniApp();
     const theme = telegramService.getTheme();
-    const platform = telegramService.getPlatform();
-    const viewport = telegramService.getViewport();
-    set({ user, theme: theme as 'light' | 'dark', platform, viewport });
-  },
-  showAlert: (message: string, callback?: () => void) => {
-    telegramService.showAlert(message, callback);
-  },
-  showConfirm: (message: string, callback?: (isConfirmed: boolean) => void) => {
-    telegramService.showConfirm(message, callback);
-  },
-  showPopup: (params: {
-    title?: string;
-    message: string;
-    buttons?: Array<{
-      id: string;
-      type?: 'default' | 'ok' | 'close' | 'cancel' | 'destructive';
-      text: string;
-    }>;
-  }, callback?: (buttonId: string) => void) => {
-    telegramService.showPopup(params, callback);
-  },
-  expand: () => {
-    telegramService.expand();
-  },
-  close: () => {
-    telegramService.close();
-  }
-})); 
+    const user = telegramService.getUser();
+    const viewportHeight = telegramService.getViewportHeight();
+    const viewportStableHeight = telegramService.getViewportStableHeight();
+
+    setState({
+      isMiniApp,
+      theme,
+      user,
+      viewportHeight,
+      viewportStableHeight,
+    });
+
+    const unsubscribeTheme = telegramService.onThemeChanged(() => {
+      setState(prev => ({
+        ...prev,
+        theme: telegramService.getTheme(),
+      }));
+    });
+
+    const unsubscribeViewport = telegramService.onViewportChanged((event) => {
+      setState(prev => ({
+        ...prev,
+        viewportHeight: event.height,
+        viewportStableHeight: event.isStateStable ? event.height : prev.viewportStableHeight,
+      }));
+    });
+
+    return () => {
+      unsubscribeTheme();
+      unsubscribeViewport();
+    };
+  }, []);
+
+  return state;
+}; 

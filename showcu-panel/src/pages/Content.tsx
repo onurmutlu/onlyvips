@@ -1,184 +1,179 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Button, Input, Upload, message, Modal, Form, Select, Spin } from 'antd';
-import { PlusOutlined, UploadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useContent } from '../hooks/useContent';
-import { storageService } from '../services';
-import { formatCurrency } from '../utils/format';
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Statistic, Table, Button, Space, Modal, message, Form, Input, Select, InputNumber, Upload } from 'antd';
+import { EyeOutlined, EditOutlined, DeleteOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { contentService } from '../services/content';
+import { Content } from '../services/content';
 
-const { TextArea } = Input;
 const { Option } = Select;
 
-interface ContentFormData {
-  title: string;
-  description: string;
-  mediaType: 'image' | 'video' | 'audio';
-  isPremium: boolean;
-  price: number;
-}
-
-const Content: React.FC = () => {
-  const { contents, loading, error, fetchContents, createContent, updateContent, deleteContent } = useContent();
+const ContentPage: React.FC = () => {
+  const [contents, setContents] = useState<Content[]>([]);
+  const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingContent, setEditingContent] = useState<string | null>(null);
+  const [selectedContent, setSelectedContent] = useState<Content | null>(null);
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchContents();
   }, []);
 
-  const handleUpload = async (file: File) => {
+  const fetchContents = async () => {
     try {
-      const response = await storageService.uploadFile(file);
-      return response.url;
+      setLoading(true);
+      const data = await contentService.getAll();
+      setContents(data);
     } catch (error) {
-      message.error('Dosya yüklenirken bir hata oluştu');
-      throw error;
+      message.error('İçerikler yüklenirken bir hata oluştu');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = async (values: ContentFormData) => {
-    try {
-      if (editingContent) {
-        await updateContent(editingContent, values);
-        message.success('İçerik güncellendi');
-      } else {
-        await createContent(values);
-        message.success('İçerik oluşturuldu');
-      }
-      setIsModalVisible(false);
-      form.resetFields();
-      setEditingContent(null);
-    } catch (error) {
-      message.error('Bir hata oluştu');
-    }
+  const handleView = (content: Content) => {
+    navigate(`/content/${content.id}`);
   };
 
-  const handleEdit = (content: any) => {
-    setEditingContent(content.id);
+  const handleEdit = (content: Content) => {
+    setSelectedContent(content);
     form.setFieldsValue(content);
     setIsModalVisible(true);
   };
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteContent(id);
-      message.success('İçerik silindi');
+      await contentService.delete(id);
+      message.success('İçerik başarıyla silindi');
+      fetchContents();
     } catch (error) {
-      message.error('Bir hata oluştu');
+      message.error('İçerik silinirken bir hata oluştu');
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Spin size="large" />
-      </div>
-    );
-  }
+  const handleModalOk = async () => {
+    try {
+      const values = await form.validateFields();
+      if (selectedContent) {
+        await contentService.update(selectedContent.id, values);
+        message.success('İçerik başarıyla güncellendi');
+      } else {
+        await contentService.create(values);
+        message.success('İçerik başarıyla oluşturuldu');
+      }
+      setIsModalVisible(false);
+      fetchContents();
+    } catch (error) {
+      message.error('İşlem sırasında bir hata oluştu');
+    }
+  };
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Card className="w-full max-w-md">
-          <div className="text-red-500 text-center">{error}</div>
-        </Card>
-      </div>
-    );
-  }
+  const columns = [
+    {
+      title: 'Başlık',
+      dataIndex: 'title',
+      key: 'title',
+    },
+    {
+      title: 'Tür',
+      dataIndex: 'mediaType',
+      key: 'mediaType',
+      render: (type: string) => type === 'image' ? 'Resim' : 'Video',
+    },
+    {
+      title: 'Görüntülenme',
+      dataIndex: 'views',
+      key: 'views',
+      render: (views: number) => (
+        <Statistic value={views} prefix={<EyeOutlined />} />
+      ),
+    },
+    {
+      title: 'Fiyat',
+      dataIndex: 'price',
+      key: 'price',
+      render: (price: number) => `${price} TON`,
+    },
+    {
+      title: 'İşlemler',
+      key: 'actions',
+      render: (_: any, record: Content) => (
+        <Space>
+          <Button
+            type="primary"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+          >
+            Görüntüle
+          </Button>
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          >
+            Düzenle
+          </Button>
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id)}
+          >
+            Sil
+          </Button>
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">İçeriklerim</h1>
-          <p className="text-gray-500">İçeriklerinizi yönetin ve yeni içerikler ekleyin</p>
-        </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setIsModalVisible(true)}
-        >
-          Yeni İçerik
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {contents.map((content) => (
+    <div style={{ padding: '24px' }}>
+      <Row gutter={[16, 16]}>
+        <Col span={24}>
           <Card
-            key={content.id}
-            className="h-full"
-            cover={
-              <div className="aspect-video bg-gray-100 flex items-center justify-center">
-                {content.mediaType === 'image' ? (
-                  <img
-                    src={content.mediaUrl}
-                    alt={content.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-gray-400">
-                    {content.mediaType === 'video' ? 'Video' : 'Ses'}
-                  </div>
-                )}
-              </div>
+            title="İçerik Yönetimi"
+            extra={
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setIsModalVisible(true)}
+              >
+                Yeni İçerik
+              </Button>
             }
-            actions={[
-              <Button
-                key="edit"
-                type="text"
-                icon={<EditOutlined />}
-                onClick={() => handleEdit(content)}
-              />,
-              <Button
-                key="delete"
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => handleDelete(content.id)}
-              />,
-            ]}
           >
-            <Card.Meta
-              title={content.title}
-              description={
-                <div>
-                  <p className="mb-2">{content.description}</p>
-                  <div className="flex justify-between items-center">
-                    <span className={`px-2 py-1 rounded ${
-                      content.isPremium ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {content.isPremium ? 'Premium' : 'Ücretsiz'}
-                    </span>
-                    {content.isPremium && (
-                      <span className="font-semibold">{formatCurrency(content.price)}</span>
-                    )}
-                  </div>
-                </div>
-              }
+            <Table
+              columns={columns}
+              dataSource={contents}
+              loading={loading}
+              rowKey="id"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Toplam ${total} içerik`,
+              }}
             />
           </Card>
-        ))}
-      </div>
+        </Col>
+      </Row>
 
       <Modal
-        title={editingContent ? 'İçerik Düzenle' : 'Yeni İçerik'}
+        title={selectedContent ? 'İçerik Düzenle' : 'Yeni İçerik'}
         open={isModalVisible}
+        onOk={handleModalOk}
         onCancel={() => {
           setIsModalVisible(false);
+          setSelectedContent(null);
           form.resetFields();
-          setEditingContent(null);
         }}
-        footer={null}
+        width={800}
       >
         <Form
           form={form}
           layout="vertical"
-          onFinish={handleSubmit}
         >
           <Form.Item
             name="title"
             label="Başlık"
-            rules={[{ required: true, message: 'Lütfen başlık girin' }]}
+            rules={[{ required: true, message: 'Lütfen başlık giriniz' }]}
           >
             <Input />
           </Form.Item>
@@ -186,42 +181,27 @@ const Content: React.FC = () => {
           <Form.Item
             name="description"
             label="Açıklama"
-            rules={[{ required: true, message: 'Lütfen açıklama girin' }]}
           >
-            <TextArea rows={4} />
+            <Input.TextArea rows={4} />
           </Form.Item>
 
           <Form.Item
             name="mediaType"
             label="Medya Türü"
-            rules={[{ required: true, message: 'Lütfen medya türü seçin' }]}
+            rules={[{ required: true, message: 'Lütfen medya türü seçiniz' }]}
           >
             <Select>
-              <Option value="image">Görsel</Option>
+              <Option value="image">Resim</Option>
               <Option value="video">Video</Option>
-              <Option value="audio">Ses</Option>
             </Select>
           </Form.Item>
 
           <Form.Item
             name="mediaUrl"
-            label="Medya"
-            rules={[{ required: true, message: 'Lütfen medya yükleyin' }]}
+            label="Medya URL"
+            rules={[{ required: true, message: 'Lütfen medya URL giriniz' }]}
           >
-            <Upload
-              customRequest={async ({ file, onSuccess, onError }) => {
-                try {
-                  const url = await handleUpload(file as File);
-                  form.setFieldValue('mediaUrl', url);
-                  onSuccess?.('ok');
-                } catch (error) {
-                  onError?.(error as Error);
-                }
-              }}
-              showUploadList={false}
-            >
-              <Button icon={<UploadOutlined />}>Yükle</Button>
-            </Upload>
+            <Input />
           </Form.Item>
 
           <Form.Item
@@ -230,34 +210,20 @@ const Content: React.FC = () => {
             valuePropName="checked"
           >
             <Select>
-              <Option value={false}>Ücretsiz</Option>
-              <Option value={true}>Premium</Option>
+              <Option value={true}>Evet</Option>
+              <Option value={false}>Hayır</Option>
             </Select>
           </Form.Item>
 
           <Form.Item
-            noStyle
-            shouldUpdate={(prevValues, currentValues) =>
-              prevValues.isPremium !== currentValues.isPremium
-            }
+            name="price"
+            label="Fiyat (TON)"
+            rules={[{ required: true, message: 'Lütfen fiyat giriniz' }]}
           >
-            {({ getFieldValue }) =>
-              getFieldValue('isPremium') ? (
-                <Form.Item
-                  name="price"
-                  label="Fiyat"
-                  rules={[{ required: true, message: 'Lütfen fiyat girin' }]}
-                >
-                  <Input type="number" min={0} step={0.01} />
-                </Form.Item>
-              ) : null
-            }
-          </Form.Item>
-
-          <Form.Item>
-            <Button type="primary" htmlType="submit" className="w-full">
-              {editingContent ? 'Güncelle' : 'Oluştur'}
-            </Button>
+            <InputNumber
+              min={0}
+              style={{ width: '100%' }}
+            />
           </Form.Item>
         </Form>
       </Modal>
@@ -265,4 +231,4 @@ const Content: React.FC = () => {
   );
 };
 
-export default Content; 
+export default ContentPage; 

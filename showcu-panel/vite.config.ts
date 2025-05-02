@@ -1,10 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import UnoCSS from 'unocss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    UnoCSS(),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -21,12 +25,18 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        secure: false,
       },
     },
+  },
+  optimizeDeps: {
+    include: ['@tonconnect/ui-react'],
+    exclude: ['@tonconnect/ui-react'],
   },
   build: {
     outDir: 'dist',
@@ -37,10 +47,23 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           antd: ['antd', '@ant-design/icons', '@ant-design/pro-components'],
-          ton: ['ton', 'ton-core', '@tonconnect/ui-react'],
+          'ton-connect': ['@tonconnect/ui-react'],
           chart: ['chart.js', 'react-chartjs-2'],
         }
       }
+    }
+  },
+  css: {
+    modules: {
+      localsConvention: 'camelCase',
+    },
+  },
+  define: {
+    'process.env': {
+      VITE_REACT_ROUTER_FUTURE_FLAGS: JSON.stringify({
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      })
     }
   }
 }) 

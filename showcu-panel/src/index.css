@@ -1,11 +1,138 @@
 :root {
-  --primary-color: #1677ff;
-  --success-color: #52c41a;
-  --warning-color: #faad14;
-  --error-color: #ff4d4f;
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-    'Noto Color Emoji';
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #1a1a1a;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tg-theme-bg-color: #1a1a1a;
+  --tg-theme-text-color: #ffffff;
+  --tg-theme-hint-color: #999999;
+  --tg-theme-link-color: #2481cc;
+  --tg-theme-button-color: #2481cc;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-secondary-bg-color: #2a2a2a;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
+}
+
+.ant-layout {
+  background: transparent !important;
+}
+
+.ant-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(10px);
+  border: none !important;
+}
+
+.ant-table {
+  background: transparent !important;
+}
+
+.ant-table-thead > tr > th {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.ant-table-tbody > tr > td {
+  background: transparent !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.ant-modal-content {
+  background: var(--tg-theme-secondary-bg-color) !important;
+}
+
+.ant-modal-header {
+  background: var(--tg-theme-secondary-bg-color) !important;
+}
+
+.ant-modal-title {
+  color: var(--tg-theme-text-color) !important;
+}
+
+.ant-input,
+.ant-input-number,
+.ant-select-selector {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: none !important;
+  color: var(--tg-theme-text-color) !important;
+}
+
+.ant-input::placeholder,
+.ant-input-number::placeholder {
+  color: var(--tg-theme-hint-color) !important;
+}
+
+.ant-select-dropdown {
+  background: var(--tg-theme-secondary-bg-color) !important;
+}
+
+.ant-select-item {
+  color: var(--tg-theme-text-color) !important;
+}
+
+.ant-select-item-option-selected {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(to right, #7c3aed, #4f46e5) !important;
+  border: none !important;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(to right, #6d28d9, #4338ca) !important;
+}
+
+.ant-tag {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: none !important;
+}
+
+.ant-statistic-title {
+  color: var(--tg-theme-hint-color) !important;
+}
+
+.ant-statistic-content {
+  color: var(--tg-theme-text-color) !important;
 }
 
 * {
@@ -15,24 +142,8 @@
 }
 
 html {
-  font-family: var(--font-family);
   font-size: 16px;
   line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  background-color: #f0f2f5;
-}
-
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
 .container {
@@ -186,4 +297,13 @@ body {
 
 .mb-5 {
   margin-bottom: 2rem;
+}
+
+.ant-menu {
+  background: transparent !important;
+}
+
+.ant-input:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(0, 136, 204, 0.2) !important;
 } 

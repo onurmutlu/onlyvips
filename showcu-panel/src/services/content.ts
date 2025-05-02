@@ -1,53 +1,53 @@
-import api from './api';
+import { api } from './api';
 
-interface Content {
+export interface Content {
   id: string;
   title: string;
   description: string;
   mediaUrl: string;
-  mediaType: 'image' | 'video' | 'audio';
+  mediaType: 'image' | 'video';
   isPremium: boolean;
   price: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-interface CreateContentData {
+export interface CreateContentData {
   title: string;
   description: string;
   mediaUrl: string;
-  mediaType: 'image' | 'video' | 'audio';
+  mediaType: 'image' | 'video';
   isPremium: boolean;
   price: number;
 }
 
 export const contentService = {
-  async getAll() {
-    const response = await api.get<Content[]>('/content');
-    return response.data;
+  getAll: async (): Promise<Content[]> => {
+    const { data } = await api.get('/api/content');
+    return data;
   },
 
-  async getById(id: string) {
-    const response = await api.get<Content>(`/content/${id}`);
-    return response.data;
+  getById: async (id: string): Promise<Content> => {
+    const { data } = await api.get(`/api/content/${id}`);
+    return data;
   },
 
-  async create(data: CreateContentData) {
-    const response = await api.post<Content>('/content', data);
-    return response.data;
+  create: async (data: CreateContentData): Promise<Content> => {
+    const { data: response } = await api.post('/api/content', data);
+    return response;
   },
 
-  async update(id: string, data: Partial<CreateContentData>) {
-    const response = await api.put<Content>(`/content/${id}`, data);
-    return response.data;
+  update: async (id: string, data: Partial<CreateContentData>): Promise<Content> => {
+    const { data: response } = await api.put(`/api/content/${id}`, data);
+    return response;
   },
 
-  async delete(id: string) {
-    await api.delete(`/content/${id}`);
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/api/content/${id}`);
   },
 
-  async getAnalytics(id: string) {
-    const response = await api.get(`/content/${id}/analytics`);
-    return response.data;
-  }
+  getAnalytics: async (id: string) => {
+    const { data } = await api.get(`/api/content/${id}/analytics`);
+    return data;
+  },
 }; 

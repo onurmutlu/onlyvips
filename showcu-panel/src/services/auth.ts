@@ -1,57 +1,65 @@
-import api from './api';
+import { api } from './api';
 
-interface LoginData {
-  email: string;
-  password: string;
-}
-
-interface RegisterData {
-  username: string;
-  email: string;
-  password: string;
-  telegramId: string;
-}
-
-interface AuthResponse {
+export interface AuthResponse {
   token: string;
   user: {
     id: string;
     username: string;
     email: string;
-    telegramId: string;
     role: 'admin' | 'creator' | 'user';
   };
 }
 
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+  role: 'creator' | 'user';
+}
+
 export const authService = {
-  async login(data: LoginData) {
-    const response = await api.post<AuthResponse>('/auth/login', data);
-    return response.data;
+  login: async (data: LoginData): Promise<AuthResponse> => {
+    const { data: response } = await api.post('/api/auth/login', data);
+    return response;
   },
 
-  async register(data: RegisterData) {
-    const response = await api.post<AuthResponse>('/auth/register', data);
-    return response.data;
+  register: async (data: RegisterData): Promise<AuthResponse> => {
+    const { data: response } = await api.post('/api/auth/register', data);
+    return response;
   },
 
-  async logout() {
-    await api.post('/auth/logout');
+  logout: async (): Promise<void> => {
+    await api.post('/api/auth/logout');
   },
 
-  async refreshToken() {
-    const response = await api.post<AuthResponse>('/auth/refresh');
-    return response.data;
+  refreshToken: async (): Promise<AuthResponse> => {
+    const { data: response } = await api.post('/api/auth/refresh');
+    return response;
   },
 
-  async forgotPassword(email: string) {
-    await api.post('/auth/forgot-password', { email });
+  forgotPassword: async (email: string): Promise<void> => {
+    await api.post('/api/auth/forgot-password', { email });
   },
 
-  async resetPassword(token: string, password: string) {
-    await api.post('/auth/reset-password', { token, password });
+  resetPassword: async (token: string, password: string): Promise<void> => {
+    await api.post('/api/auth/reset-password', { token, password });
   },
 
-  async verifyEmail(token: string) {
+  getCurrentUser: async (): Promise<AuthResponse['user']> => {
+    const { data } = await api.get('/api/auth/me');
+    return data;
+  },
+
+  isAuthenticated: () => {
+    return !!localStorage.getItem('token');
+  },
+
+  verifyEmail: async (token: string): Promise<void> => {
     await api.post('/auth/verify-email', { token });
   }
 }; 

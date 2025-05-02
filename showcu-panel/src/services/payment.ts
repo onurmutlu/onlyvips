@@ -1,63 +1,70 @@
-import api from './api';
+import { api } from './api';
 
-interface Payment {
+export interface Payment {
   id: string;
   userId: string;
   packageId: string;
   amount: number;
-  currency: 'TON' | 'USD';
-  status: 'pending' | 'completed' | 'failed';
-  transactionHash?: string;
-  createdAt: string;
-  updatedAt: string;
+  currency: string;
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  paymentMethod: 'ton' | 'credit_card' | 'bank_transfer';
+  transactionId?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-interface CreatePaymentData {
-  userId: string;
+export interface CreatePaymentData {
   packageId: string;
+  paymentMethod: 'ton' | 'credit_card' | 'bank_transfer';
   amount: number;
-  currency: 'TON' | 'USD';
+  currency: string;
 }
 
 export const paymentService = {
-  async getAll() {
-    const response = await api.get<Payment[]>('/payments');
-    return response.data;
+  getAll: async (): Promise<Payment[]> => {
+    const { data } = await api.get('/api/payments');
+    return data;
   },
 
-  async getById(id: string) {
-    const response = await api.get<Payment>(`/payments/${id}`);
-    return response.data;
+  getById: async (id: string): Promise<Payment> => {
+    const { data } = await api.get(`/api/payments/${id}`);
+    return data;
   },
 
-  async create(data: CreatePaymentData) {
-    const response = await api.post<Payment>('/payments', data);
-    return response.data;
+  create: async (data: CreatePaymentData): Promise<Payment> => {
+    const { data: createdPayment } = await api.post('/api/payments', data);
+    return createdPayment;
   },
 
-  async update(id: string, data: Partial<CreatePaymentData>) {
-    const response = await api.put<Payment>(`/payments/${id}`, data);
-    return response.data;
+  verify: async (id: string): Promise<Payment> => {
+    const { data } = await api.post(`/api/payments/${id}/verify`);
+    return data;
   },
 
-  async delete(id: string) {
-    await api.delete(`/payments/${id}`);
+  refund: async (id: string): Promise<Payment> => {
+    const { data } = await api.post(`/api/payments/${id}/refund`);
+    return data;
   },
 
-  async getByUserId(userId: string) {
-    const response = await api.get(`/payments/user/${userId}`);
-    return response.data;
+  getHistory: async (userId: string): Promise<Payment[]> => {
+    const { data } = await api.get(`/api/payments/history/${userId}`);
+    return data;
   },
 
-  async getByPackageId(packageId: string) {
-    const response = await api.get(`/payments/package/${packageId}`);
-    return response.data;
+  getByUserId: async (userId: string): Promise<Payment[]> => {
+    const { data } = await api.get(`/api/payments/user/${userId}`);
+    return data;
   },
 
-  async getAnalytics(startDate: string, endDate: string) {
-    const response = await api.get('/payments/analytics', {
+  getByPackageId: async (packageId: string): Promise<Payment[]> => {
+    const { data } = await api.get(`/api/payments/package/${packageId}`);
+    return data;
+  },
+
+  getAnalytics: async (startDate: string, endDate: string): Promise<any> => {
+    const { data } = await api.get('/api/payments/analytics', {
       params: { startDate, endDate }
     });
-    return response.data;
+    return data;
   }
 }; 

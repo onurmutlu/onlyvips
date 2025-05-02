@@ -1,55 +1,49 @@
-import api from './api';
+import { api } from './api';
 
-interface User {
+export interface User {
   id: string;
   username: string;
   email: string;
-  telegramId: string;
   role: 'admin' | 'creator' | 'user';
   status: 'active' | 'inactive' | 'banned';
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-interface CreateUserData {
-  username: string;
-  email: string;
-  telegramId: string;
-  role: 'admin' | 'creator' | 'user';
+export interface UpdateUserData {
+  username?: string;
+  email?: string;
+  role?: 'admin' | 'creator' | 'user';
+  status?: 'active' | 'inactive' | 'banned';
 }
 
 export const userService = {
-  async getAll() {
-    const response = await api.get<User[]>('/users');
-    return response.data;
+  getAll: async (): Promise<User[]> => {
+    const { data } = await api.get('/api/users');
+    return data;
   },
 
-  async getById(id: string) {
-    const response = await api.get<User>(`/users/${id}`);
-    return response.data;
+  getById: async (id: string): Promise<User> => {
+    const { data } = await api.get(`/api/users/${id}`);
+    return data;
   },
 
-  async create(data: CreateUserData) {
-    const response = await api.post<User>('/users', data);
-    return response.data;
+  getByUsername: async (username: string): Promise<User> => {
+    const { data } = await api.get(`/api/users/username/${username}`);
+    return data;
   },
 
-  async update(id: string, data: Partial<CreateUserData>) {
-    const response = await api.put<User>(`/users/${id}`, data);
-    return response.data;
+  update: async (id: string, data: UpdateUserData): Promise<User> => {
+    const { data: updatedUser } = await api.put(`/api/users/${id}`, data);
+    return updatedUser;
   },
 
-  async delete(id: string) {
-    await api.delete(`/users/${id}`);
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/api/users/${id}`);
   },
 
-  async getByTelegramId(telegramId: string) {
-    const response = await api.get<User>(`/users/telegram/${telegramId}`);
-    return response.data;
-  },
-
-  async getAnalytics() {
-    const response = await api.get('/users/analytics');
-    return response.data;
+  getAnalytics: async (): Promise<any> => {
+    const { data } = await api.get('/api/users/analytics');
+    return data;
   }
 }; 

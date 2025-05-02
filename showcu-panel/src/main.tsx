@@ -1,17 +1,15 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
-import trTR from 'antd/locale/tr_TR';
+import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
+import 'virtual:uno.css';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const container = document.getElementById('root');
+if (!container) throw new Error('Failed to find the root element');
+const root = createRoot(container);
+
+root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <ConfigProvider locale={trTR}>
-        <App />
-      </ConfigProvider>
-    </BrowserRouter>
+    <App />
   </React.StrictMode>
 ); 

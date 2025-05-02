@@ -1,58 +1,54 @@
-import api from './api';
+import { api } from './api';
 
-interface Notification {
+export interface Notification {
   id: string;
-  userId: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
-  read: boolean;
-  createdAt: string;
+  createdAt: Date;
+  readAt?: Date;
 }
 
-interface CreateNotificationData {
-  userId: string;
+export interface CreateNotificationData {
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
 }
 
 export const notificationService = {
-  async getAll() {
-    const response = await api.get<Notification[]>('/notifications');
-    return response.data;
+  getAll: async (): Promise<Notification[]> => {
+    const { data } = await api.get('/api/notifications');
+    return data;
   },
 
-  async getUnread() {
-    const response = await api.get<Notification[]>('/notifications/unread');
-    return response.data;
+  getUnread: async (): Promise<Notification[]> => {
+    const { data } = await api.get('/api/notifications/unread');
+    return data;
   },
 
-  async getById(id: string) {
-    const response = await api.get<Notification>(`/notifications/${id}`);
-    return response.data;
+  getById: async (id: string): Promise<Notification> => {
+    const { data } = await api.get(`/api/notifications/${id}`);
+    return data;
   },
 
-  async create(data: CreateNotificationData) {
-    const response = await api.post<Notification>('/notifications', data);
-    return response.data;
+  create: async (data: CreateNotificationData): Promise<Notification> => {
+    const { data: createdNotification } = await api.post('/api/notifications', data);
+    return createdNotification;
   },
 
-  async markAsRead(id: string) {
-    const response = await api.put<Notification>(`/notifications/${id}/read`);
-    return response.data;
+  markAsRead: async (id: string): Promise<void> => {
+    await api.put(`/api/notifications/${id}/read`);
   },
 
-  async markAllAsRead() {
-    const response = await api.put<Notification[]>('/notifications/read-all');
-    return response.data;
+  markAllAsRead: async (): Promise<void> => {
+    await api.put('/api/notifications/read-all');
   },
 
-  async delete(id: string) {
-    await api.delete(`/notifications/${id}`);
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/api/notifications/${id}`);
   },
 
-  async deleteAll() {
-    await api.delete('/notifications');
+  deleteAll: async (): Promise<void> => {
+    await api.delete('/api/notifications');
   }
 }; 

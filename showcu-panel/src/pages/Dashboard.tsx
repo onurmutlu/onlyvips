@@ -1,132 +1,126 @@
-import React, { useEffect } from 'react';
-import { Card, Statistic, Row, Col, Spin } from 'antd';
-import { useAnalytics } from '../hooks/useAnalytics';
-import { useContent } from '../hooks/useContent';
-import { usePackages } from '../hooks/usePackages';
-import { useSubscribers } from '../hooks/useSubscribers';
-import { formatCurrency } from '../utils/format';
+import React from 'react';
+import { Card, Statistic, Table, Tag, Space } from 'antd';
+import { ArrowUpOutlined, ArrowDownOutlined, EyeOutlined, DollarOutlined, UserOutlined } from '@ant-design/icons';
+import Navigation from '../components/layout/Navigation';
 
 const Dashboard: React.FC = () => {
-  const { analytics, loading: analyticsLoading, error: analyticsError, fetchOverview } = useAnalytics();
-  const { contents, loading: contentsLoading } = useContent();
-  const { packages, loading: packagesLoading } = usePackages();
-  const { subscribers, loading: subscribersLoading } = useSubscribers();
+  const stats = [
+    {
+      title: 'Toplam İzlenme',
+      value: 1250,
+      change: 12.5,
+      icon: <EyeOutlined className="text-purple-400" />,
+    },
+    {
+      title: 'Toplam Gelir',
+      value: 2500,
+      change: 8.2,
+      icon: <DollarOutlined className="text-green-400" />,
+    },
+    {
+      title: 'Aktif Abone',
+      value: 45,
+      change: -2.1,
+      icon: <UserOutlined className="text-blue-400" />,
+    },
+  ];
 
-  useEffect(() => {
-    fetchOverview();
-  }, []);
+  const recentContent = [
+    {
+      key: '1',
+      title: 'Özel İçerik #1',
+      views: 128,
+      revenue: 12.5,
+      status: 'published',
+    },
+    {
+      key: '2',
+      title: 'Özel İçerik #2',
+      views: 95,
+      revenue: 8.2,
+      status: 'published',
+    },
+  ];
 
-  const loading = analyticsLoading || contentsLoading || packagesLoading || subscribersLoading;
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (analyticsError) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Card className="w-full max-w-md">
-          <div className="text-red-500 text-center">{analyticsError}</div>
-        </Card>
-      </div>
-    );
-  }
+  const columns = [
+    {
+      title: 'İçerik',
+      dataIndex: 'title',
+      key: 'title',
+      render: (text: string) => <span className="text-white font-medium">{text}</span>,
+    },
+    {
+      title: 'İzlenme',
+      dataIndex: 'views',
+      key: 'views',
+      render: (views: number) => <span className="text-white/70">{views}</span>,
+    },
+    {
+      title: 'Gelir',
+      dataIndex: 'revenue',
+      key: 'revenue',
+      render: (revenue: number) => <span className="text-green-400">{revenue} TON</span>,
+    },
+    {
+      title: 'Durum',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <Tag color={status === 'published' ? 'green' : 'orange'}>
+          {status === 'published' ? 'Yayında' : 'Taslak'}
+        </Tag>
+      ),
+    },
+  ];
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
-        <p className="text-gray-500">Hesabınızın genel durumunu görüntüleyin</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-indigo-900 text-white">
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
+      
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <Card key={index} className="bg-white/5 backdrop-blur-lg border-0 shadow-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/60 mb-2">{stat.title}</p>
+                  <Statistic
+                    value={stat.value}
+                    valueStyle={{ color: '#fff' }}
+                    className="text-2xl font-bold"
+                  />
+                </div>
+                <div className="text-3xl">{stat.icon}</div>
+              </div>
+              <div className="mt-4 flex items-center">
+                {stat.change > 0 ? (
+                  <ArrowUpOutlined className="text-green-400 mr-1" />
+                ) : (
+                  <ArrowDownOutlined className="text-red-400 mr-1" />
+                )}
+                <span className={stat.change > 0 ? 'text-green-400' : 'text-red-400'}>
+                  {Math.abs(stat.change)}%
+                </span>
+                <span className="text-white/60 ml-2">geçen aya göre</span>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="bg-white/5 backdrop-blur-lg border-0 shadow-xl">
+          <h2 className="text-xl font-bold mb-4">Son İçerikler</h2>
+          <Table
+            columns={columns}
+            dataSource={recentContent}
+            pagination={false}
+            className="[&_.ant-table-thead>tr>th]:bg-transparent [&_.ant-table-thead>tr>th]:text-white/60 [&_.ant-table-tbody>tr>td]:bg-transparent [&_.ant-table-tbody>tr:hover>td]:bg-white/5"
+          />
+        </Card>
       </div>
 
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} md={6}>
-          <Card className="h-full">
-            <Statistic
-              title="Toplam İçerik"
-              value={contents.length}
-              valueStyle={{ color: '#1677ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card className="h-full">
-            <Statistic
-              title="VIP Paketler"
-              value={packages.length}
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card className="h-full">
-            <Statistic
-              title="Toplam Abone"
-              value={subscribers.length}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card className="h-full">
-            <Statistic
-              title="Toplam Gelir"
-              value={formatCurrency(analytics?.totalRevenue || 0)}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
-          <Card title="Son Eklenen İçerikler">
-            <div className="space-y-4">
-              {contents.slice(0, 5).map((content) => (
-                <div key={content.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h3 className="font-medium">{content.title}</h3>
-                    <p className="text-gray-500 text-sm">{content.mediaType}</p>
-                  </div>
-                  <span className={`px-2 py-1 rounded ${
-                    content.isPremium ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                  }`}>
-                    {content.isPremium ? 'Premium' : 'Ücretsiz'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} lg={12}>
-          <Card title="Son Aboneler">
-            <div className="space-y-4">
-              {subscribers.slice(0, 5).map((subscriber) => (
-                <div key={subscriber.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h3 className="font-medium">{subscriber.username}</h3>
-                    <p className="text-gray-500 text-sm">{subscriber.packageName}</p>
-                  </div>
-                  <span className={`px-2 py-1 rounded ${
-                    subscriber.status === 'active' ? 'bg-green-100 text-green-800' :
-                    subscriber.status === 'expired' ? 'bg-red-100 text-red-800' :
-                    'bg-orange-100 text-orange-800'
-                  }`}>
-                    {subscriber.status === 'active' ? 'Aktif' :
-                     subscriber.status === 'expired' ? 'Süresi Dolmuş' :
-                     'İptal Edilmiş'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </Col>
-      </Row>
+      <Navigation />
     </div>
   );
 };

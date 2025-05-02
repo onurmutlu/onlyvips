@@ -1,55 +1,49 @@
-import api from './api';
+import { api } from './api';
 
-interface Subscriber {
+export interface Subscriber {
   id: string;
   userId: string;
-  username: string;
   packageId: string;
-  packageName: string;
-  startDate: string;
-  endDate: string;
   status: 'active' | 'expired' | 'cancelled';
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CreateSubscriberData {
-  userId: string;
-  packageId: string;
+  startDate: Date;
+  endDate: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const subscriberService = {
-  async getAll() {
-    const response = await api.get<Subscriber[]>('/subscribers');
-    return response.data;
+  getAll: async (): Promise<Subscriber[]> => {
+    const { data } = await api.get('/api/subscribers');
+    return data;
   },
 
-  async getById(id: string) {
-    const response = await api.get<Subscriber>(`/subscribers/${id}`);
-    return response.data;
+  getById: async (id: string): Promise<Subscriber> => {
+    const { data } = await api.get(`/api/subscribers/${id}`);
+    return data;
   },
 
-  async create(data: CreateSubscriberData) {
-    const response = await api.post<Subscriber>('/subscribers', data);
-    return response.data;
+  getByUserId: async (userId: string): Promise<Subscriber[]> => {
+    const { data } = await api.get(`/api/subscribers/user/${userId}`);
+    return data;
   },
 
-  async update(id: string, data: Partial<CreateSubscriberData>) {
-    const response = await api.put<Subscriber>(`/subscribers/${id}`, data);
-    return response.data;
+  getByPackageId: async (packageId: string): Promise<Subscriber[]> => {
+    const { data } = await api.get(`/api/subscribers/package/${packageId}`);
+    return data;
   },
 
-  async delete(id: string) {
-    await api.delete(`/subscribers/${id}`);
+  create: async (userId: string, packageId: string): Promise<Subscriber> => {
+    const { data } = await api.post('/api/subscribers', { userId, packageId });
+    return data;
   },
 
-  async getByPackageId(packageId: string) {
-    const response = await api.get(`/subscribers/package/${packageId}`);
-    return response.data;
+  cancel: async (id: string): Promise<Subscriber> => {
+    const { data } = await api.put(`/api/subscribers/${id}/cancel`);
+    return data;
   },
 
-  async getAnalytics() {
-    const response = await api.get('/subscribers/analytics');
-    return response.data;
+  getAnalytics: async (): Promise<any> => {
+    const { data } = await api.get('/api/subscribers/analytics');
+    return data;
   }
 }; 
