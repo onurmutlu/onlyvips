@@ -1,0 +1,38 @@
+apiVersion: v2
+name: onlyvips-chart
+description: Helm chart for OnlyVips platform
+
+# Chart tipi
+type: application
+
+# Chart versiyonu
+version: 0.1.0
+
+# Uygulama versiyonu
+appVersion: "1.0.0"
+
+# Bağımlılıklar
+dependencies:
+  - name: postgresql
+    version: "~12.5.5"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: redis
+    version: "~17.11.3"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+  - name: mongodb
+    version: "~13.9.1"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: mongodb.enabled
+
+# Anahtar kelimeler
+keywords:
+  - onlyvips
+  - telegram
+  - platform
+
+# Bakımcılar
+maintainers:
+  - name: OnlyVips Team
+    email: admin@onlyvips.com 

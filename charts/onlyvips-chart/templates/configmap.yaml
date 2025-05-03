@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: onlyvips-config
+  labels:
+    app: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  # Ortak yapılandırma
+  ENVIRONMENT: {{ .Values.global.environment | quote }}
+  
+  # Backend API yapılandırması
+  BACKEND_API_URL: {{ printf "http://%s:%s" .Values.backend.name (toString .Values.backend.service.port) | quote }}
+  
+  # Telegram yapılandırması
+  TELEGRAM_BOT_USERNAME: "OnlyVipsBot"
+  
+  # Grafana dashboard yapılandırması
+  grafana-dashboard.json: |
+{{ .Files.Get "files/grafana-dashboard.json" | indent 4 }} 

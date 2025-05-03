@@ -1,100 +1,172 @@
-
 # OnlyVips Backend API
 
-OnlyVips projesinin backend API hizmetleri.
+OnlyVips platformunun ana API servisidir. Tüm bileşenler (MiniApp, Şovcu Panel ve Flirt-Bot) bu API ile iletişim kurar.
 
-## Özellikler
+## 🚀 Özellikler
 
-- İçerik yönetimi API'leri
-- Şovcu panel entegrasyonu
-- Kullanıcı ve abonelik yönetimi
-- TON ödeme sistemi entegrasyonu
-- Güvenli kimlik doğrulama
+- **Kullanıcı Yönetimi**: Telegram tabanlı kimlik doğrulama ve kullanıcı profil yönetimi
+- **İçerik Yönetimi**: Fotoğraf, video ve metin tabanlı içerik oluşturma, düzenleme ve silme
+- **VIP Paket Yönetimi**: Premium içerik paketleri oluşturma ve abonelik yönetimi
+- **Görev Sistemi**: Kullanıcı görevleri ve ödül mekanizması
+- **Cüzdan ve Ödeme**: TON blockchain entegrasyonu ile ödeme işlemleri
+- **Analitik**: İçerik performansı ve kullanıcı etkileşim istatistikleri
 
-## Kurulum
+## 🛠️ Teknolojiler
 
-1. Gereklilikleri yükleyin:
-```bash
-npm install
-```
+- **Node.js** ve **Express**: API framework
+- **TypeScript**: Tip güvenliği
+- **MongoDB**: Veritabanı
+- **JWT**: Kimlik doğrulama
+- **TON API**: Blockchain entegrasyonu
 
-2. `.env` dosyasını oluşturun:
-```bash
-cp .env.example .env
-```
+## 📋 Monorepo'da Kullanım
 
-3. `.env` dosyasını düzenleyin ve gerekli değerleri girin:
-```
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/onlyvips
-JWT_SECRET=your_jwt_secret
-TON_WALLET_ADDRESS=your_ton_wallet_address
-```
-
-## Çalıştırma
-
-Geliştirme ortamında çalıştırmak için:
-```bash
-npm run dev
-```
-
-Üretim ortamında çalıştırmak için:
-```bash
-npm run build
-npm start
-```
-
-## Docker ile Çalıştırma
+Bu API, monorepo yapısında Yarn Workspaces ile yönetilmektedir. Root dizinden şu şekilde çalıştırabilirsiniz:
 
 ```bash
-docker build -t onlyvips-api .
-docker run -p 5000:5000 -v ./uploads:/app/uploads onlyvips-api
+# Geliştirme modunda başlatmak için
+yarn start:backend
+
+# Build işlemi için
+yarn workspace onlyvips-backend-api build
 ```
 
-## API Rotaları
+## 🚀 Kurulum
 
-- `/content` - İçerik yönetimi
-- `/creators` - Şovcu profil yönetimi
-- `/users` - Kullanıcı işlemleri
-- `/packages` - Paket ve abonelik yönetimi
-- `/payments` - Ödeme işlemleri
-- `/creator-panel` - Şovcu panel API'leri
+### Manuel Kurulum
 
-## API Belgeleri
+1. Depoyu klonlayın:
+   ```bash
+   git clone https://github.com/yourusername/onlyvips.git
+   ```
 
-API çalıştıktan sonra `/docs` adresinden Swagger UI ile API belgelerine erişebilirsiniz.
+2. Bağımlılıkları yükleyin:
+   ```bash
+   # Root dizinde
+   yarn install
+   ```
 
-## Maliyet Optimizasyonu
+3. `.env` dosyasını oluşturun:
+   ```bash
+   cd backend-api
+   cp .env.example .env
+   ```
 
-OpenAI API maliyetlerini azaltmak için:
+4. `.env` dosyasını düzenleyin ve gerekli değişkenleri yapılandırın.
 
-1. `OPENAI_MODEL` için daha ucuz model kullanılmaktadır (gpt-3.5-turbo-instruct)
-2. `GPT_MAX_USAGE_DAY` ile kullanıcı başına günlük kullanım sınırlandırılmıştır
-3. `GPT_MAX_TOKENS` ile yanıt başına token sayısı sınırlandırılmıştır
+5. Veritabanını hazırlayın:
+   ```bash
+   # MongoDB'yi yerel olarak veya bir sunucuda çalıştırdığınızdan emin olun
+   ```
 
-## Proje Yapısı
+6. Geliştirme sunucusunu başlatın:
+   ```bash
+   # Root dizinde
+   yarn start:backend
+   
+   # Veya backend-api dizininde
+   yarn dev
+   ```
 
+### Docker ile Kurulum
+
+1. Docker ve Docker Compose'u yükleyin.
+
+2. `docker-config` dizinindeki `docker-compose.yml` dosyasını düzenleyin ve değişkenleri yapılandırın.
+
+3. Container'ları başlatın:
+   ```bash
+   cd docker-config
+   docker-compose up -d
+   ```
+
+## 📚 API Dokümantasyonu
+
+### Kullanıcı ve Kimlik Doğrulama
+
+- `POST /api/auth/telegram`: Telegram kimlik doğrulama
+- `GET /api/auth/me`: Geçerli kullanıcı bilgilerini getir
+- `GET /api/profile`: Kullanıcı profilini getir
+- `GET /api/profile/showcu/:showcuId`: Şovcu profilini getir
+- `POST /api/profile/become-showcu`: Şovcu olma başvurusu
+
+### İçerik Yönetimi
+
+- `GET /api/content`: Tüm içerikleri getir
+- `GET /api/content/:id`: İçerik detaylarını getir
+- `POST /api/content`: Yeni içerik oluştur
+- `PUT /api/content/:id`: İçerik güncelle
+- `DELETE /api/content/:id`: İçerik sil
+- `POST /api/content/:id/like`: İçeriği beğen
+
+### VIP Paket Yönetimi
+
+- `GET /api/packages`: Tüm paketleri getir
+- `GET /api/packages/:id`: Paket detaylarını getir
+- `POST /api/packages`: Yeni paket oluştur
+- `PUT /api/packages/:id`: Paket güncelle
+- `DELETE /api/packages/:id`: Paket sil
+- `POST /api/packages/:id/subscribe`: Pakete abone ol
+- `GET /api/packages/subscriptions/list`: Tüm abonelikleri getir
+
+### Görev Sistemi
+
+- `GET /api/tasks`: Görevleri listele
+- `POST /api/tasks/complete`: Görev tamamla
+
+### Cüzdan ve Ödeme
+
+- `GET /api/wallet`: Cüzdan bilgilerini getir
+- `PUT /api/wallet/ton-address`: TON adresi güncelle
+- `POST /api/wallet/withdraw`: Para çekme talebi oluştur
+- `POST /api/wallet/purchase-stars`: Star satın al
+
+### Analitik
+
+- `GET /api/analytics/dashboard`: Şovcu gösterge paneli
+- `GET /api/analytics/content/:id`: İçerik analitiği
+- `GET /api/analytics/package/:id`: Paket analitiği
+
+## 🔄 Monorepo Entegrasyonu
+
+Bu API, `common-modules` paketini kullanarak tipler ve yardımcı işlevleri paylaşır:
+
+```typescript
+import { User, Content } from 'onlyvips-common';
+
+// Modellerde ve route'larda 
 ```
-backend-api/
-├── app/
-│   ├── controllers/    # API endpoint işleyicileri
-│   ├── middleware/     # Kimlik doğrulama, hata işleme
-│   ├── models/         # Veritabanı modelleri
-│   ├── routes/         # API rotaları
-│   ├── services/       # İş mantığı servisleri
-│   └── utils/          # Yardımcı fonksiyonlar
-├── main.py             # Uygulama giriş noktası
-├── requirements.txt    # Proje bağımlılıkları
-├── Dockerfile          # Docker yapılandırması
-└── README.md           # Bu dosya
+
+### TypeScript Özel Tiplerini Kullanma
+
+Model tanımlarınızı iyileştirmek için ortak tipleri kullanın:
+
+```typescript
+import { User } from 'onlyvips-common';
+
+// User modelini ortak tiplerle genişletme
+export interface IUserDocument extends User, Document {
+  // Veritabanı spesifik alanlar
+}
 ```
 
-## Deployment Kontrol Listesi
+## 🔗 Diğer Bileşenlerle Entegrasyon
 
-- [ ] Veritabanı bağlantısı kontrol edildi
-- [ ] .env dosyası yapılandırıldı
-- [ ] API rotaları test edildi
-- [ ] TON ödeme sistemi test edildi
-- [ ] Rate limiting yapılandırıldı
-- [ ] HTTPS yapılandırması tamamlandı
+- **MiniApp**: REST API üzerinden JSON veri alışverişi
+- **Şovcu Panel**: REST API üzerinden içerik yönetimi
+- **Flirt-Bot**: Bot doğrulama ve görev tamamlama entegrasyonu
+
+## 🧪 Test
+
+```bash
+# Root dizinde
+yarn workspace onlyvips-backend-api test
+
+# Veya backend-api dizininde
+yarn test
+```
+
+## 📄 Lisans
+
+© 2024 SiyahKare. Tüm hakları saklıdır.
 

@@ -1,0 +1,46 @@
+{{- if .Values.showcuPanel.ingress.enabled -}}
+{{- $fullName := .Values.showcuPanel.name -}}
+{{- $svcPort := .Values.showcuPanel.service.port -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app: {{ .Values.showcuPanel.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  {{- with .Values.showcuPanel.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.showcuPanel.ingress.className }}
+  ingressClassName: {{ .Values.showcuPanel.ingress.className }}
+  {{- end }}
+  {{- if .Values.showcuPanel.ingress.tls }}
+  tls:
+    {{- range .Values.showcuPanel.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.showcuPanel.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+          {{- end }}
+    {{- end }}
+{{- end }} 

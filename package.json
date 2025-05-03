@@ -1,5 +1,25 @@
 {
+  "name": "onlyvips-mono",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "miniapp",
+    "showcu-panel",
+    "common-modules",
+    "backend-api"
+  ],
+  "scripts": {
+    "install": "yarn install && poetry install",
+    "start:backend": "yarn workspace onlyvips-backend-api start",
+    "start:miniapp": "yarn workspace onlyvips-miniapp dev",
+    "start:panel": "yarn workspace showcu-panel dev",
+    "start:bot": "cd flirt-bot && poetry run python bot_listener.py",
+    "build:all": "yarn workspaces run build",
+    "lint:all": "yarn workspaces run lint"
+  },
   "devDependencies": {
+    "@sentry/react": "^9.15.0",
+    "@sentry/vite-plugin": "^3.3.1",
     "@types/react": "^19.1.2",
     "@types/react-router-dom": "^5.3.3",
     "@types/telegram-web-app": "^7.10.1"

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.showcuPanel.name }}
+  labels:
+    app: {{ .Values.showcuPanel.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.showcuPanel.service.type }}
+  ports:
+    - port: {{ .Values.showcuPanel.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Values.showcuPanel.name }}
+    release: {{ .Release.Name }} 

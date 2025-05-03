@@ -1,0 +1,301 @@
+name: OnlyVips CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+  DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+  MONGODB_URI: ${{ secrets.MONGODB_URI }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+  TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+  TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  TON_API_KEY: ${{ secrets.TON_API_KEY }}
+  TON_WALLET_ADDRESS: ${{ secrets.TON_WALLET_ADDRESS }}
+
+jobs:
+  frontend-test:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        frontend: [miniapp, showcu-panel, common-modules]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn workspace ${{ matrix.frontend }} lint
+
+      - name: Build
+        run: yarn workspace ${{ matrix.frontend }} build
+
+      - name: Test with coverage
+        run: |
+          yarn workspace ${{ matrix.frontend }} test --coverage
+          echo "::set-output name=coverage::$(cat coverage/coverage-summary.json | jq -r '.total.statements.pct')"
+        id: coverage
+        continue-on-error: true
+
+      - name: Check coverage
+        if: ${{ steps.coverage.outputs.coverage < 80 && github.event_name == 'pull_request' }}
+        run: |
+          echo "Coverage for ${{ matrix.frontend }} is below 80% (${COVERAGE})"
+          exit 1
+        env:
+          COVERAGE: ${{ steps.coverage.outputs.coverage }}
+
+  e2e-test:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: [frontend-test]
+    if: ${{ matrix.frontend == 'miniapp' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: cd miniapp && npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: cd miniapp && npx playwright test
+        env:
+          CI: true
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: miniapp/playwright-report/
+          retention-days: 30
+
+  backend-test:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'yarn'
+
+      - name: Install JS dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'poetry'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Python dependencies
+        run: |
+          cd backend-api
+          poetry install
+
+      - name: Run backend linters
+        run: |
+          cd backend-api
+          poetry run ruff check .
+          yarn lint
+
+      - name: Run backend tests with coverage
+        run: |
+          cd backend-api
+          poetry run pytest --cov=app --cov-report=xml
+          echo "::set-output name=coverage::$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(root.attrib['line-rate'] * 100)")"
+        id: coverage
+        env:
+          MONGODB_URI: mongodb://localhost:27017/onlyvips_test
+
+      - name: Check coverage
+        if: ${{ steps.coverage.outputs.coverage < 80 && github.event_name == 'pull_request' }}
+        run: |
+          echo "Coverage for backend is below 80% (${COVERAGE})"
+          exit 1
+        env:
+          COVERAGE: ${{ steps.coverage.outputs.coverage }}
+
+      - name: Login to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v2
+        with:
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ env.DOCKER_HUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend-api
+          push: true
+          tags: ${{ env.DOCKER_HUB_USERNAME }}/onlyvips-backend:latest
+
+  bot-test:
+    name: Flirt-Bot CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'poetry'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Python dependencies
+        run: |
+          cd flirt-bot
+          poetry install
+
+      - name: Run linters
+        run: |
+          cd flirt-bot
+          poetry run ruff check .
+
+      - name: Create .env file
+        run: |
+          cd flirt-bot
+          echo "TELEGRAM_API_ID=${{ env.TELEGRAM_API_ID }}" > .env
+          echo "TELEGRAM_API_HASH=${{ env.TELEGRAM_API_HASH }}" >> .env
+          echo "TELEGRAM_BOT_TOKEN=${{ env.TELEGRAM_BOT_TOKEN }}" >> .env
+          echo "OPENAI_API_KEY=${{ env.OPENAI_API_KEY }}" >> .env
+          echo "BACKEND_API_URL=http://localhost:8000" >> .env
+
+      - name: Run tests with coverage
+        run: |
+          cd flirt-bot
+          poetry run pytest --cov=src --cov-report=xml
+          echo "::set-output name=coverage::$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(float(root.attrib['line-rate']) * 100)")"
+        id: coverage
+
+      - name: Check coverage
+        if: ${{ steps.coverage.outputs.coverage < 80 && github.event_name == 'pull_request' }}
+        run: |
+          echo "Coverage for flirt-bot is below 80% (${COVERAGE})"
+          exit 1
+        env:
+          COVERAGE: ${{ steps.coverage.outputs.coverage }}
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v4
+        with:
+          context: ./flirt-bot
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/onlyvips-flirt-bot:latest
+
+  deploy-frontend:
+    name: Deploy Frontend to Vercel
+    needs: [frontend-test, backend-test, bot-test, e2e-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [miniapp, showcu-panel]
+        include:
+          - app: miniapp
+            vercel_project_id: ${{ secrets.MINIAPP_VERCEL_PROJECT_ID }}
+          - app: showcu-panel
+            vercel_project_id: ${{ secrets.SHOWCU_PANEL_VERCEL_PROJECT_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'yarn'
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build frontend
+        run: yarn workspace ${{ matrix.app }} build
+
+      - name: Deploy to Vercel
+        run: |
+          cd ${{ matrix.app }}
+          vercel deploy --prod --token ${{ env.VERCEL_TOKEN }} \
+            --scope ${{ env.VERCEL_ORG_ID }} \
+            --yes
+        env:
+          VERCEL_PROJECT_ID: ${{ matrix.vercel_project_id }} 

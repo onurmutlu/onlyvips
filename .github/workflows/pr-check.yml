@@ -1,0 +1,182 @@
+name: PR Kontrolleri
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+# PR'larda merge yetkisi için kalite kontrolleri
+jobs:
+  code-quality:
+    name: Kod Kalitesi Kontrolü
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.quality-gate.outputs.status }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'poetry'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Python dependencies
+        run: |
+          poetry install
+
+      # Frontend linter kontrolü
+      - name: Check frontend linters
+        run: |
+          yarn workspace miniapp lint
+          yarn workspace showcu-panel lint
+          yarn workspace common-modules lint
+
+      # Backend linter kontrolü
+      - name: Check backend linters
+        run: |
+          cd backend-api
+          poetry run ruff check .
+          yarn lint
+
+      # Bot linter kontrolü
+      - name: Check bot linters
+        run: |
+          cd flirt-bot
+          poetry run ruff check .
+
+      # Test kapsamını kontrol et
+      - name: Frontend coverage check
+        id: frontend-coverage
+        run: |
+          yarn workspace miniapp test --coverage
+          yarn workspace showcu-panel test --coverage
+          echo "::set-output name=miniapp_coverage::$(cat miniapp/coverage/coverage-summary.json | jq -r '.total.statements.pct // 0')"
+          echo "::set-output name=showcu_coverage::$(cat showcu-panel/coverage/coverage-summary.json | jq -r '.total.statements.pct // 0')"
+        continue-on-error: true
+
+      - name: Backend coverage check
+        id: backend-coverage
+        run: |
+          cd backend-api
+          poetry run pytest --cov=app --cov-report=xml
+          echo "::set-output name=coverage::$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(float(root.attrib['line-rate']) * 100 if 'line-rate' in root.attrib else 0)")"
+        continue-on-error: true
+
+      - name: Bot coverage check
+        id: bot-coverage
+        run: |
+          cd flirt-bot
+          poetry run pytest --cov=src --cov-report=xml
+          echo "::set-output name=coverage::$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(float(root.attrib['line-rate']) * 100 if 'line-rate' in root.attrib else 0)")"
+        continue-on-error: true
+
+      # Kalite kapısı kontrolü
+      - name: Quality Gate
+        id: quality-gate
+        run: |
+          MINIAPP_COVERAGE="${{ steps.frontend-coverage.outputs.miniapp_coverage }}"
+          SHOWCU_COVERAGE="${{ steps.frontend-coverage.outputs.showcu_coverage }}"
+          BACKEND_COVERAGE="${{ steps.backend-coverage.outputs.coverage }}"
+          BOT_COVERAGE="${{ steps.bot-coverage.outputs.coverage }}"
+          
+          MINIAPP_PASS=$([ "${MINIAPP_COVERAGE:-0}" -ge 80 ] && echo "true" || echo "false")
+          SHOWCU_PASS=$([ "${SHOWCU_COVERAGE:-0}" -ge 80 ] && echo "true" || echo "false")
+          BACKEND_PASS=$([ "${BACKEND_COVERAGE:-0}" -ge 80 ] && echo "true" || echo "false")
+          BOT_PASS=$([ "${BOT_COVERAGE:-0}" -ge 80 ] && echo "true" || echo "false")
+          
+          echo "MiniApp Kapsamı: ${MINIAPP_COVERAGE:-0}% (Durum: ${MINIAPP_PASS})"
+          echo "Şovcu Panel Kapsamı: ${SHOWCU_COVERAGE:-0}% (Durum: ${SHOWCU_PASS})"
+          echo "Backend Kapsamı: ${BACKEND_COVERAGE:-0}% (Durum: ${BACKEND_PASS})"
+          echo "Bot Kapsamı: ${BOT_COVERAGE:-0}% (Durum: ${BOT_PASS})"
+          
+          if [ "$MINIAPP_PASS" = "true" ] && [ "$SHOWCU_PASS" = "true" ] && [ "$BACKEND_PASS" = "true" ] && [ "$BOT_PASS" = "true" ]; then
+            echo "::set-output name=status::success"
+          else
+            echo "::set-output name=status::failure"
+          fi
+
+  e2e-tests:
+    name: End-to-End Testleri
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: cd miniapp && npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: cd miniapp && npx playwright test
+        env:
+          CI: true
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: miniapp/playwright-report/
+          retention-days: 30
+
+  update-pr:
+    name: PR Durumunu Güncelle
+    needs: [code-quality, e2e-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: PR Durumunu Güncelle
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const status = '${{ needs.code-quality.outputs.status }}';
+            
+            const name = 'Kod Kalitesi Kontrolü';
+            const description = status === 'success' 
+              ? 'Tüm kalite kontrolleri geçildi! PR birleştirmeye hazır.'
+              : 'Kod kapsamı veya linter kontrolü başarısız! Lütfen düzeltin.';
+            
+            const sha = context.payload.pull_request.head.sha;
+            
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name,
+              head_sha: sha,
+              status: 'completed',
+              conclusion: status,
+              output: {
+                title: name,
+                summary: description
+              }
+            });
+            
+            if (status === 'failure') {
+              core.setFailed('Kod kalitesi kontrolü başarısız oldu.');
+            } 

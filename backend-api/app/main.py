@@ -3,14 +3,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 from app.core.config import settings
-from app.api.endpoints import users, tasks, contents, showcus, payments, analytics, auth, webhooks, ai
+from app.api.endpoints import users, tasks, contents, showcus, payments, analytics, auth, webhooks, ai, metrics
+from app.middleware.metrics_middleware import MetricsMiddleware
 from app.core.database import create_tables
+from app.utils.logger import app_logger
 
 app = FastAPI(
     title="OnlyVips API",
     description="OnlyVips platformu için backend API",
     version="1.0.0",
 )
+
+# Metrik ve loglama middleware'i
+app.add_middleware(MetricsMiddleware)
 
 # CORS ayarları
 app.add_middleware(
@@ -31,12 +36,25 @@ app.include_router(payments.router, prefix="/api/payments", tags=["Ödemeler"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analitik"])
 app.include_router(webhooks.router, prefix="/api/webhooks", tags=["Webhooks"])
 app.include_router(ai.router, prefix="/api/ai", tags=["Yapay Zeka"])
+app.include_router(metrics.router, prefix="/api", tags=["Metrikler"])
 
 @app.on_event("startup")
 async def startup():
     """Uygulama başladığında yapılacak işlemler"""
     # Veritabanı tablolarını oluştur
     create_tables()
+    
+    # Uygulama başlangıcını logla
+    app_logger.info(
+        "OnlyVips API başlatıldı",
+        version="1.0.0",
+        environment=settings.ENV,
+    )
+    
+@app.on_event("shutdown")
+async def shutdown():
+    """Uygulama kapatıldığında yapılacak işlemler"""
+    app_logger.info("OnlyVips API kapatıldı")
 
 @app.get("/", tags=["Root"])
 async def root():

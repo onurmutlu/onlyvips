@@ -1,0 +1,35 @@
+{{- if .Values.flirtBot.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.flirtBot.name }}
+  labels:
+    app: {{ .Values.flirtBot.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.flirtBot.name }}
+  minReplicas: {{ .Values.flirtBot.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.flirtBot.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.flirtBot.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.flirtBot.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.flirtBot.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.flirtBot.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }} 

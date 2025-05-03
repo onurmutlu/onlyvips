@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: onlyvips-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=onlyvipsdev
+    networks:
+      - onlyvips-network
+
+  backend:
+    build:
+      context: ../backend-api
+      dockerfile: Dockerfile
+    container_name: onlyvips-backend
+    restart: always
+    depends_on:
+      - mongodb
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend-api/uploads:/app/uploads
+      - ../backend-api/logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+      - MONGODB_URI=mongodb://root:onlyvipsdev@mongodb:27017/onlyvips?authSource=admin
+      - JWT_SECRET=production_jwt_secret_change_this
+      - JWT_EXPIRES_IN=30d
+      - CORS_ORIGINS=https://panel.onlyvips.xyz,https://app.onlyvips.xyz
+    networks:
+      - onlyvips-network
+
+  showcu-panel:
+    build:
+      context: ../showcu-panel
+      dockerfile: Dockerfile
+    container_name: onlyvips-showcu-panel
+    restart: always
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://backend:8000
+    networks:
+      - onlyvips-network
+
+  miniapp:
+    build:
+      context: ../miniapp
+      dockerfile: Dockerfile
+    container_name: onlyvips-miniapp
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://backend:8000
+    networks:
+      - onlyvips-network
+
+  flirtbot:
+    build:
+      context: ../flirt-bot
+      dockerfile: Dockerfile
+    container_name: onlyvips-flirtbot
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      - BACKEND_API_URL=http://backend:8000
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - SESSION_STRING=${SESSION_STRING}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=info
+    volumes:
+      - ../flirt-bot/sessions:/app/sessions
+      - ../flirt-bot/logs:/app/logs
+    networks:
+      - onlyvips-network
+    healthcheck:
+      test: ["CMD", "python", "healthcheck.py"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  mongo-data:
+
+networks:
+  onlyvips-network:
+    driver: bridge 

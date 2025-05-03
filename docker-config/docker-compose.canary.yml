@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  # Canary backend servisi
+  backend-canary:
+    image: onlyvips/backend-api:canary
+    container_name: onlyvips-backend-canary
+    restart: always
+    depends_on:
+      - mongodb
+    ports:
+      - "8001:8000"
+    volumes:
+      - ../backend-api/uploads:/app/uploads
+      - ../backend-api/logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+      - MONGODB_URI=mongodb://root:onlyvipsdev@mongodb:27017/onlyvips?authSource=admin
+      - JWT_SECRET=production_jwt_secret_change_this
+      - JWT_EXPIRES_IN=30d
+      - CORS_ORIGINS=https://panel.onlyvips.xyz,https://app.onlyvips.xyz
+      - CANARY=true
+    networks:
+      - onlyvips-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Canary miniapp servisi
+  miniapp-canary:
+    image: onlyvips/miniapp:canary
+    container_name: onlyvips-miniapp-canary
+    restart: always
+    ports:
+      - "3002:80"
+    depends_on:
+      - backend-canary
+    environment:
+      - VITE_API_URL=http://backend-canary:8000
+      - CANARY=true
+    networks:
+      - onlyvips-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Canary showcu panel servisi
+  showcu-panel-canary:
+    image: onlyvips/showcu-panel:canary
+    container_name: onlyvips-showcu-panel-canary
+    restart: always
+    ports:
+      - "3003:80"
+    depends_on:
+      - backend-canary
+    environment:
+      - VITE_API_URL=http://backend-canary:8000
+      - CANARY=true
+    networks:
+      - onlyvips-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Canary flirtbot servisi
+  flirtbot-canary:
+    image: onlyvips/flirt-bot:canary
+    container_name: onlyvips-flirtbot-canary
+    restart: always
+    depends_on:
+      - backend-canary
+    environment:
+      - BACKEND_API_URL=http://backend-canary:8000
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - SESSION_STRING=${SESSION_STRING}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=info
+      - CANARY=true
+    volumes:
+      - ../flirt-bot/sessions:/app/sessions
+      - ../flirt-bot/logs:/app/logs
+    networks:
+      - onlyvips-network
+    healthcheck:
+      test: ["CMD", "python", "healthcheck.py"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Nginx load balancer (canary deployment için)
+  nginx-lb:
+    image: nginx:alpine
+    container_name: onlyvips-nginx-lb
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/canary:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/certs
+    depends_on:
+      - backend
+      - backend-canary
+      - miniapp
+      - miniapp-canary
+      - showcu-panel
+      - showcu-panel-canary
+    networks:
+      - onlyvips-network
+
+networks:
+  onlyvips-network:
+    external: true 

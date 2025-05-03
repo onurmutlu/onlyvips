@@ -23,11 +23,64 @@ from telethon.tl.types import MessageEntityUrl, MessageEntityTextUrl, ChannelPar
 from telethon.tl.functions.channels import GetParticipantRequest
 from dotenv import load_dotenv
 from openai import OpenAI
+import sys
+from typing import Dict, List, Optional, Any, Union
 
-# Loglama
+# Secrets provider modülünü içe aktar
+sys.path.append('../backend-api')  # app.core'u erişilebilir yap
+try:
+    from app.core.secrets_provider import get_secret_provider, SecretBackendType
+    # Yapılandırmaya göre uygun secret provider'ı al
+    secrets = get_secret_provider(os.getenv("SECRET_PROVIDER", SecretBackendType.ENV))
+except ImportError:
+    # Eğer import başarısız olursa varsayılan olarak ortam değişkenlerini kullan
+    logging.warning("Secret provider modülü bulunamadı, ortam değişkenleri kullanılacak")
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    # Basit bir env-based secret provider
+    class EnvSecrets:
+        def get_secret(self, key: str, default: Optional[Any] = None) -> Any:
+            return os.getenv(key, default)
+    
+    secrets = EnvSecrets()
+
+# JSON formatında loglama modülünü içe aktar
+from src.utils.json_logger import bot_logger, api_logger, task_logger, metrics
+
+# Telethon ve diğer bağımlılıkları içe aktar
+from telethon import TelegramClient, events
+from telethon.tl.types import User, Message, Channel, Chat
+from telethon.tl.functions.messages import ImportChatInviteRequest
+from telethon.tl.functions.channels import JoinChannelRequest
+
+# Secret değerlerini yeni secret provider ile al
+API_ID = secrets.get_secret("TELEGRAM_API_ID")
+API_HASH = secrets.get_secret("TELEGRAM_API_HASH")
+BOT_TOKEN = secrets.get_secret("TELEGRAM_BOT_TOKEN")
+OPENAI_API_KEY = secrets.get_secret("OPENAI_API_KEY")
+
+# Yapılandırmaları kontrol et
+if not API_ID or not API_HASH or not BOT_TOKEN:
+    bot_logger.error("Telegram API kimlik bilgileri bulunamadı", 
+                    missing_configs=["TELEGRAM_API_ID", "TELEGRAM_API_HASH", "TELEGRAM_BOT_TOKEN"])
+    sys.exit(1)
+
+# OpenAI API anahtarını kontrol et
+if not OPENAI_API_KEY:
+    bot_logger.warning("OpenAI API anahtarı bulunamadı", features_disabled=["AI"])
+
+# Diğer yapılandırma değerlerini secret provider üzerinden al
+BACKEND_API_URL = secrets.get_secret("BACKEND_API_URL", "http://localhost:8000")
+
+# Log ayarları
 logging.basicConfig(
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    handlers=[
+        logging.FileHandler("flirt-bot.log"),
+        logging.StreamHandler()
+    ]
 )
 logger = logging.getLogger(__name__)
 
@@ -35,17 +88,15 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # API ve bot bilgileri
-API_ID = os.getenv("TELEGRAM_API_ID")
-API_HASH = os.getenv("TELEGRAM_API_HASH")
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-SESSION_STRING = os.getenv("SESSION_STRING")
-BOT_USERNAME = os.getenv("BOT_USERNAME", "OnlyVipsBot")
-BACKEND_API_URL = os.getenv("BACKEND_API_URL", "http://localhost:8000")
-ADMIN_KEY = os.getenv("ADMIN_KEY", "your-secret-admin-key")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo-instruct")  # Daha ucuz model
-GPT_MAX_USAGE_DAY = int(os.getenv("GPT_MAX_USAGE_DAY", "50"))  # Günlük maksimum kullanım
-GPT_MAX_TOKENS = int(os.getenv("GPT_MAX_TOKENS", "250"))  # Maksimum token sayısı
+API_ID = API_ID
+API_HASH = API_HASH
+BOT_TOKEN = BOT_TOKEN
+SESSION_STRING = secrets.get_secret("SESSION_STRING")
+BOT_USERNAME = secrets.get_secret("BOT_USERNAME", "OnlyVipsBot")
+ADMIN_KEY = secrets.get_secret("ADMIN_KEY", "your-secret-admin-key")
+OPENAI_MODEL = secrets.get_secret("OPENAI_MODEL", "gpt-3.5-turbo-instruct")  # Daha ucuz model
+GPT_MAX_USAGE_DAY = int(secrets.get_secret("GPT_MAX_USAGE_DAY", "50"))  # Günlük maksimum kullanım
+GPT_MAX_TOKENS = int(secrets.get_secret("GPT_MAX_TOKENS", "250"))  # Maksimum token sayısı
 
 # OpenAI API istemcisi oluştur
 if OPENAI_API_KEY:
@@ -412,7 +463,7 @@ async def admin_verify(event):
     """Admin manuel doğrulama komutu"""
     # Sadece yetkili kişiler kullanabilir
     sender = await event.get_sender()
-    admin_ids = os.getenv("ADMIN_IDS", "").split(",")
+    admin_ids = secrets.get_secret("ADMIN_IDS", "").split(",")
     
     if str(sender.id) not in admin_ids:
         return

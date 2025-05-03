@@ -1,0 +1,27 @@
+{{- if .Values.miniapp.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.miniapp.name }}
+  labels:
+    app: {{ .Values.miniapp.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.miniapp.name }}
+  minReplicas: {{ .Values.miniapp.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.miniapp.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.miniapp.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.miniapp.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+{{- end }} 

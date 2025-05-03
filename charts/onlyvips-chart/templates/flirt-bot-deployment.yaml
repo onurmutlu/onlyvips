@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.flirtBot.name }}
+  labels:
+    app: {{ .Values.flirtBot.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  {{- if not .Values.flirtBot.autoscaling.enabled }}
+  replicas: {{ .Values.flirtBot.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Values.flirtBot.name }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.flirtBot.name }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Values.flirtBot.name }}
+          image: "{{ .Values.flirtBot.image.repository }}:{{ .Values.flirtBot.image.tag }}"
+          imagePullPolicy: {{ .Values.flirtBot.image.pullPolicy }}
+          env:
+            - name: BACKEND_API_URL
+              value: "http://{{ .Values.backend.name }}:{{ .Values.backend.service.port }}"
+            - name: TELEGRAM_API_ID
+              valueFrom:
+                secretKeyRef:
+                  name: flirtbot-secret
+                  key: telegram-api-id
+            - name: TELEGRAM_API_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: flirtbot-secret
+                  key: telegram-api-hash
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: flirtbot-secret
+                  key: telegram-bot-token
+            - name: SESSION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: flirtbot-secret
+                  key: session-string
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flirtbot-secret
+                  key: openai-api-key
+            - name: LOG_LEVEL
+              value: "info"
+          livenessProbe:
+            {{- toYaml .Values.flirtBot.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.flirtBot.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.flirtBot.resources | nindent 12 }}
+          volumeMounts:
+            - name: sessions
+              mountPath: /app/sessions
+            - name: logs
+              mountPath: /app/logs
+      volumes:
+        - name: sessions
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.flirtBot.name }}-sessions-pvc
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: logs
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.flirtBot.name }}-logs-pvc
+          {{- else }}
+          emptyDir: {}
+          {{- end }} 

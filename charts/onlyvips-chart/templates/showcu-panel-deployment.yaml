@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.showcuPanel.name }}
+  labels:
+    app: {{ .Values.showcuPanel.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  {{- if not .Values.showcuPanel.autoscaling.enabled }}
+  replicas: {{ .Values.showcuPanel.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Values.showcuPanel.name }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.showcuPanel.name }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Values.showcuPanel.name }}
+          image: "{{ .Values.showcuPanel.image.repository }}:{{ .Values.showcuPanel.image.tag }}"
+          imagePullPolicy: {{ .Values.showcuPanel.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: VITE_API_URL
+              value: "https://{{ .Values.backend.ingress.hosts.0.host }}"
+            - name: MODE
+              value: {{ .Values.global.environment }}
+          livenessProbe:
+            {{- toYaml .Values.showcuPanel.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.showcuPanel.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.showcuPanel.resources | nindent 12 }} 

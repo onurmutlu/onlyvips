@@ -1,0 +1,44 @@
+Thank you for installing {{ .Chart.Name }}.
+
+OnlyVips platformu başarıyla kuruldu. Aşağıdaki adreslere erişebilirsiniz:
+
+{{- if .Values.backend.ingress.enabled }}
+Backend API URL:
+{{- range .Values.backend.ingress.hosts }}
+  https://{{ .host }}
+{{- end }}
+{{- else }}
+Backend API, ClusterIP ile yayınlanmıştır:
+  - Backend: {{ .Release.Name }}-{{ .Values.backend.name }}:{{ .Values.backend.service.port }}
+{{- end }}
+
+{{- if .Values.miniapp.ingress.enabled }}
+MiniApp URL:
+{{- range .Values.miniapp.ingress.hosts }}
+  https://{{ .host }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.showcuPanel.ingress.enabled }}
+Showcu Panel URL:
+{{- range .Values.showcuPanel.ingress.hosts }}
+  https://{{ .host }}
+{{- end }}
+{{- end }}
+
+Sistem durumunu kontrol etmek için:
+  kubectl get pods -n {{ .Release.Namespace }}
+
+Logları görüntülemek için:
+  kubectl logs -n {{ .Release.Namespace }} -l app={{ .Values.backend.name }} -f
+  kubectl logs -n {{ .Release.Namespace }} -l app={{ .Values.flirtBot.name }} -f
+
+MongoDB erişim bilgileri:
+  Host: {{ .Release.Name }}-mongodb
+  Port: 27017
+  Username: {{ .Values.global.mongodb.auth.username }}
+  Database: {{ .Values.global.mongodb.auth.database }}
+
+Redis erişim bilgileri:
+  Host: {{ .Release.Name }}-redis-master
+  Port: 6379 

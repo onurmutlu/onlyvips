@@ -1,0 +1,24 @@
+# Bu dosya GitHub'ın CODEOWNERS özelliğini kullanır
+# Detaylı bilgi: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Genel (varsayılan) sahipler
+*                @SiyahKare
+
+# Backend API
+/backend-api/     @SiyahKare/backend-team
+
+# Frontend
+/miniapp/         @SiyahKare/frontend-team
+/showcu-panel/    @SiyahKare/frontend-team
+
+# Flirt-Bot
+/flirt-bot/       @SiyahKare/bot-team
+
+# Ortak modüller
+/common-modules/  @SiyahKare/frontend-team @SiyahKare/backend-team
+
+# Docker yapılandırması
+/docker-config/   @SiyahKare/devops-team
+
+# GitHub Actions
+/.github/workflows/ @SiyahKare/devops-team 

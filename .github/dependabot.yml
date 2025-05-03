@@ -1,0 +1,119 @@
+# Dependabot otomatik paket güncellemeleri yapılandırması
+# Detaylar: https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  # Backend API NPM bağımlılıkları 
+  - package-ecosystem: "npm"
+    directory: "/backend-api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "backend"
+    reviewers:
+      - "@SiyahKare/backend-team"
+
+  # MiniApp NPM bağımlılıkları
+  - package-ecosystem: "npm"
+    directory: "/miniapp"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "frontend"
+    reviewers:
+      - "@SiyahKare/frontend-team"
+      
+  # Şovcu Panel NPM bağımlılıkları
+  - package-ecosystem: "npm"
+    directory: "/showcu-panel"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "frontend"
+    reviewers:
+      - "@SiyahKare/frontend-team"
+      
+  # Common Modules NPM bağımlılıkları
+  - package-ecosystem: "npm"
+    directory: "/common-modules"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "common"
+    reviewers:
+      - "@SiyahKare/frontend-team"
+      - "@SiyahKare/backend-team"
+
+  # Flirt-Bot Python bağımlılıkları
+  - package-ecosystem: "pip"
+    directory: "/flirt-bot"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "bot"
+    reviewers:
+      - "@SiyahKare/bot-team"
+
+  # Backend API Python bağımlılıkları
+  - package-ecosystem: "pip"
+    directory: "/backend-api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "backend"
+    reviewers:
+      - "@SiyahKare/backend-team"
+      
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "github-actions"
+    reviewers:
+      - "@SiyahKare/devops-team"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/backend-api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "docker"
+    reviewers:
+      - "@SiyahKare/devops-team"
+      
+  - package-ecosystem: "docker"
+    directory: "/flirt-bot"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "docker"
+    reviewers:
+      - "@SiyahKare/devops-team" 

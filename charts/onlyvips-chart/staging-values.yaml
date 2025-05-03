@@ -1,0 +1,189 @@
+# OnlyVips Platform Staging Değerleri
+
+# Global değerler
+global:
+  environment: staging
+  
+  # Veritabanı kimlik bilgileri (üretim değerleri staging-secrets.yaml dosyasında ayarlanmalı)
+  postgresql:
+    auth:
+      username: onlyvips
+      database: onlyvips
+  
+  mongodb:
+    auth:
+      username: onlyvips
+      database: onlyvips
+
+# Backend API ayarları
+backend:
+  enabled: true
+  name: backend
+  replicaCount: 1
+  
+  image:
+    repository: onlyvips/backend-api
+    tag: staging
+    pullPolicy: Always
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+  
+  env:
+    LOG_LEVEL: "debug"
+  
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt-staging
+    hosts:
+      - host: api-staging.onlyvips.xyz
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: api-staging-onlyvips-tls
+        hosts:
+          - api-staging.onlyvips.xyz
+
+# MiniApp yapılandırması
+miniapp:
+  enabled: true
+  name: miniapp
+  replicaCount: 1
+  
+  image:
+    repository: onlyvips/miniapp
+    tag: staging
+    pullPolicy: Always
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+  
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt-staging
+    hosts:
+      - host: app-staging.onlyvips.xyz
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: app-staging-onlyvips-tls
+        hosts:
+          - app-staging.onlyvips.xyz
+
+# Showcu Panel yapılandırması
+showcuPanel:
+  enabled: true
+  name: showcu-panel
+  replicaCount: 1
+  
+  image:
+    repository: onlyvips/showcu-panel
+    tag: staging
+    pullPolicy: Always
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+  
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt-staging
+    hosts:
+      - host: panel-staging.onlyvips.xyz
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: panel-staging-onlyvips-tls
+        hosts:
+          - panel-staging.onlyvips.xyz
+
+# Flirt Bot yapılandırması
+flirtBot:
+  enabled: true
+  name: flirt-bot
+  replicaCount: 1
+  
+  image:
+    repository: onlyvips/flirt-bot
+    tag: staging
+    pullPolicy: Always
+    
+  resources:
+    limits:
+      cpu: 300m
+      memory: 384Mi
+    requests:
+      cpu: 150m
+      memory: 192Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+# Kalıcı depolama yapılandırması
+persistence:
+  enabled: true
+  storageClass: "standard"
+  uploads:
+    size: 5Gi
+  logs:
+    size: 2Gi
+  sessions:
+    size: 1Gi
+
+# PostgreSQL yapılandırması
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      size: 5Gi
+
+# Redis yapılandırması
+redis:
+  enabled: true
+  architecture: standalone
+  master:
+    persistence:
+      size: 2Gi
+
+# MongoDB yapılandırması
+mongodb:
+  enabled: true
+  architecture: standalone
+  persistence:
+    size: 5Gi
+
+# Prometheus ve Grafana yapılandırması
+monitoring:
+  enabled: true 

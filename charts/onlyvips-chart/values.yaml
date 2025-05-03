@@ -1,0 +1,319 @@
+# OnlyVips Platform Helm Chart Değerleri
+
+# Global değerler
+global:
+  # Ortam
+  environment: production
+  
+  # Telegram yapılandırması
+  telegram:
+    apiId: ""
+    apiHash: ""
+    botToken: ""
+  
+  # Veritabanı kullanıcı bilgileri
+  postgresql:
+    auth:
+      username: onlyvips
+      password: ""
+      database: onlyvips
+  
+  # Redis kimlik bilgileri
+  redis:
+    auth:
+      password: ""
+  
+  # MongoDB kimlik bilgileri  
+  mongodb:
+    auth:
+      rootPassword: ""
+      username: onlyvips
+      password: ""
+      database: onlyvips
+  
+  # Canary Deployment ayarları
+  canary:
+    enabled: false
+    weight: 10  # Yüzde cinsinden canary trafiği
+    observation: 1800  # Saniye cinsinden gözlem süresi (30 dk)
+
+# Backend API ayarları
+backend:
+  enabled: true
+  name: backend
+  replicaCount: 2
+  
+  image:
+    repository: onlyvips/backend-api
+    tag: latest
+    pullPolicy: Always
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  env:
+    SECRET_KEY: ""
+    JWT_SECRET: ""
+    OPENAI_API_KEY: ""
+    LOG_LEVEL: "info"
+  
+  service:
+    type: ClusterIP
+    port: 8000
+  
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - host: api.onlyvips.xyz
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: api-onlyvips-tls
+        hosts:
+          - api.onlyvips.xyz
+
+# MiniApp yapılandırması
+miniapp:
+  enabled: true
+  name: miniapp
+  replicaCount: 2
+  
+  image:
+    repository: onlyvips/miniapp
+    tag: latest
+    pullPolicy: Always
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  service:
+    type: ClusterIP
+    port: 80
+  
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - host: app.onlyvips.xyz
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: app-onlyvips-tls
+        hosts:
+          - app.onlyvips.xyz
+
+# Showcu Panel yapılandırması
+showcuPanel:
+  enabled: true
+  name: showcu-panel
+  replicaCount: 2
+  
+  image:
+    repository: onlyvips/showcu-panel
+    tag: latest
+    pullPolicy: Always
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+  
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  
+  service:
+    type: ClusterIP
+    port: 80
+  
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - host: panel.onlyvips.xyz
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: panel-onlyvips-tls
+        hosts:
+          - panel.onlyvips.xyz
+
+# Flirt Bot yapılandırması
+flirtBot:
+  enabled: true
+  name: flirt-bot
+  replicaCount: 1
+  
+  image:
+    repository: onlyvips/flirt-bot
+    tag: latest
+    pullPolicy: Always
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  livenessProbe:
+    exec:
+      command:
+        - python
+        - healthcheck.py
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+
+  readinessProbe:
+    exec:
+      command:
+        - python
+        - healthcheck.py
+    initialDelaySeconds: 20
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  service:
+    type: ClusterIP
+    port: 8080
+
+# PostgreSQL yapılandırması
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      size: 10Gi
+  auth:
+    existingSecret: "postgresql-secret"
+  service:
+    ports:
+      postgresql: 5432
+
+# Redis yapılandırması
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    existingSecret: "redis-secret"
+    existingSecretPasswordKey: "redis-password"
+  master:
+    persistence:
+      size: 8Gi
+
+# MongoDB yapılandırması
+mongodb:
+  enabled: true
+  architecture: standalone
+  auth:
+    existingSecret: "mongodb-secret"
+  persistence:
+    size: 10Gi
+
+# Prometheus ve Grafana yapılandırması
+monitoring:
+  enabled: false
+  serviceMonitor:
+    labels:
+      release: prometheus
+
+# PodSecurityPolicy ayarları
+podSecurityPolicy:
+  enabled: false

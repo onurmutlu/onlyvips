@@ -1,0 +1,27 @@
+{{- if .Values.showcuPanel.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.showcuPanel.name }}
+  labels:
+    app: {{ .Values.showcuPanel.name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.showcuPanel.name }}
+  minReplicas: {{ .Values.showcuPanel.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.showcuPanel.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.showcuPanel.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.showcuPanel.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+{{- end }} 

@@ -1,172 +1,199 @@
+# Şovcu Panel
 
-# 🌟 Şovcu Panel - OnlyVips İçerik Üretici Platformu
+OnlyVips platformunun içerik üreticileri için tasarlanmış kontrol paneli. İçerik yönetimi, VIP paket oluşturma ve analitik takibi için kullanılır.
 
-Telegram MiniApp olarak çalışan, içerik oluşturucular (şovcular) için özel olarak geliştirilmiş yönetim paneli.
+## 🚀 Özellikler
 
-## 📱 Özellikler
-
-- **İçerik Yönetimi**: Fotoğraf, video, ses ve yazı içeriklerini kolayca yükleyin ve yönetin
-- **VIP Paket Oluşturma**: Özel abonelik paketleri oluşturun ve yönetin
-- **Analitik Dashboard**: Abone sayısı, görüntülenme ve kazanç istatistiklerini takip edin
-- **Gelir Takibi**: TON ödemelerini izleyin ve kazançlarınızı görüntüleyin
-- **Abone Yönetimi**: Abonelerinizi ve onların tercihlerini yönetin
-- **Telegram Entegrasyonu**: MiniApp API ile tam entegrasyon
-- **TON Blockchain Desteği**: Kripto para ödemeleri için TON cüzdan entegrasyonu
-- **Çoklu Medya Desteği**: Farklı medya türleri için özel önizlemeler ve oynatıcılar
-- **Reaktif Tasarım**: Tüm cihazlarda optimum görüntüleme deneyimi
+- **İçerik Yönetimi**: Fotoğraf, video, ses ve metin içerikleri yükleme ve düzenleme
+- **VIP Paket Yönetimi**: Premium içerik paketleri oluşturma ve düzenleme
+- **Gelir Takibi**: Aboneler ve gelir istatistikleri
+- **Analitik Paneli**: İçerik performansı ve kullanıcı etkileşimi analizi
+- **TON Entegrasyonu**: Blockchain ödemeleri ve para çekme
+- **Telegram Bağlantısı**: Bot ve Telegram hesap entegrasyonu
 
 ## 🛠️ Teknolojiler
 
-- React + Vite
-- TypeScript
-- TailwindCSS
-- React Router
-- Chart.js (Grafikler için)
-- React Query (Veri yönetimi)
-- Telegram MiniApp SDK
-- TON Connect 2.0 (Blockchain entegrasyonu)
+- **React**: UI kütüphanesi
+- **TypeScript**: Tip güvenliği
+- **Vite**: Build aracı
+- **Ant Design**: UI komponent kütüphanesi
+- **UnoCSS**: Atomik CSS framework
+- **TON Connect**: Blockchain cüzdan entegrasyonu
+
+## 📋 Monorepo'da Kullanım
+
+Bu uygulama, monorepo yapısında Yarn Workspaces ile yönetilmektedir. Root dizinden şu şekilde çalıştırabilirsiniz:
+
+```bash
+# Geliştirme modunda başlatmak için
+yarn start:panel
+
+# Build işlemi için
+yarn workspace showcu-panel build
+```
 
 ## 🚀 Kurulum
 
-```bash
-# Gereksinimleri yükle
-npm install
+### Gereksinimler
 
-# Tip tanımlamalarını yükle
-npm i --save-dev @types/react @types/react-router-dom
+- Node.js 16+
+- Yarn
 
-# Geliştirme sunucusunu başlat
-npm run dev
+### Monorepo Üzerinden Kurulum
 
-# Üretim için derleme
-npm run build
-```
+1. Bağımlılıkları yükleyin:
+   ```bash
+   # Root dizinde
+   yarn install
+   ```
 
-## ⚙️ Ortam Değişkenleri
+2. `.env` dosyasını oluşturun:
+   ```bash
+   cd showcu-panel
+   cp .env.example .env
+   ```
 
-`.env` dosyasına aşağıdaki değişkenleri ekleyin:
+3. `.env` dosyasını düzenleyin:
+   ```
+   VITE_API_URL=http://localhost:8000
+   VITE_TON_NETWORK=testnet
+   VITE_TG_WEB_APP_VERSION=6.9
+   ```
 
-```
-# API URL
-VITE_API_URL=https://api.onlyvips.com
-
-# Telegram MiniApp
-VITE_BOT_USERNAME=OnlyVipsBot
-
-# Medya URL
-VITE_MEDIA_URL=https://api.onlyvips.com/uploads
-
-# TON Blockchain Settings
-VITE_TON_CENTER=https://toncenter.com/api/v2/jsonRPC
-VITE_TON_WALLET_ADDRESS=your_ton_wallet_address
-```
+4. Geliştirme sunucusunu başlatın:
+   ```bash
+   # Root dizinde
+   yarn start:panel
+   
+   # Veya showcu-panel dizininde
+   yarn dev
+   ```
 
 ## 📦 Proje Yapısı
 
 ```
 showcu-panel/
+├── public/              # Statik dosyalar
 ├── src/
-│   ├── api/           # API istemcisi ve veri işlemleri
-│   ├── components/    # Yeniden kullanılabilir UI bileşenleri
-│   │   ├── ContentUploader.tsx    # İçerik yükleme bileşeni
-│   │   ├── StatisticsPanel.tsx    # İstatistik görüntüleme paneli
-│   │   └── PackageManager.tsx     # Paket yönetim bileşeni
-│   ├── pages/         # Sayfa bileşenleri
-│   ├── types/         # TypeScript tip tanımlamaları
-│   ├── hooks/         # Özel React hook'ları
-│   ├── utils/         # Yardımcı fonksiyonlar
-│   ├── context/       # React context'leri
-│   ├── App.tsx        # Ana uygulama bileşeni
-│   └── main.tsx       # Uygulama giriş noktası
-├── public/            # Statik dosyalar
-├── index.html         # HTML şablonu
-├── vite.config.ts     # Vite yapılandırması
-├── package.json       # Proje bağımlılıkları
-└── README.md          # Bu dosya
+│   ├── api/             # API istek fonksiyonları
+│   ├── assets/          # Resimler, ikonlar
+│   ├── components/      # UI bileşenleri
+│   │   ├── content/     # İçerik yönetimi bileşenleri
+│   │   └── layout/      # Layout bileşenleri
+│   ├── contexts/        # React context'leri
+│   ├── hooks/           # Custom React hooks
+│   ├── pages/           # Sayfa bileşenleri
+│   ├── services/        # Harici servis entegrasyonları
+│   ├── styles/          # Stil dosyaları
+│   ├── types/           # TypeScript tip tanımları
+│   └── utils/           # Yardımcı fonksiyonlar
+├── index.html           # HTML şablonu
+├── package.json         # Proje ve bağımlılık yapılandırması
+├── tsconfig.json        # TypeScript yapılandırması
+├── uno.config.ts        # UnoCSS yapılandırması
+└── vite.config.ts       # Vite yapılandırması
 ```
 
-## 🔌 API Entegrasyonu
+## 🧭 Sayfa Yapısı
 
-Şovcu Panel, OnlyVips Backend API ile entegre çalışır:
+Şovcu Panel aşağıdaki ana sayfalardan oluşur:
 
-- **İçerik Yönetimi**: `/creator-panel/content` endpoint'i üzerinden içerik CRUD işlemleri
-- **Paket Yönetimi**: `/creator-panel/packages` endpoint'i üzerinden paket CRUD işlemleri
-- **İstatistikler**: `/creator-panel/statistics` endpoint'i üzerinden analitik verilere erişim
-- **Abone Yönetimi**: `/creator-panel/subscribers` endpoint'i ile abone bilgileri
-- **Kazanç Takibi**: `/creator-panel/earnings` endpoint'i ile gelir istatistikleri
+- **Gösterge Paneli**: Genel bakış ve özet istatistikler
+- **İçerik Yönetimi**: İçerik oluşturma, düzenleme ve silme
+- **VIP Paketler**: VIP paket yönetimi
+- **Aboneler**: Abone listesi ve yönetimi
+- **Analitik**: Detaylı performans analizi
+- **Cüzdan**: Gelir ve TON para çekme işlemleri
+- **Profil**: Profil ayarları ve yapılandırma
 
-## 💰 Ödeme Sistemleri
+## 🔄 Monorepo Entegrasyonu
 
-Şovcu Panel, çeşitli ödeme yöntemlerini destekler:
+Bu uygulama, monorepo yapısındaki diğer bileşenlerle aşağıdaki şekilde entegre olur:
 
-- **TON Blockchain**: Kripto para ödemeleri için entegre edilmiş TON Connect 2.0
-- **Star Sistemi**: Platform içi para birimi olarak Star kullanımı
-- **Para Çekme İşlemleri**: Kazançları TON cüzdanına aktarma
+1. **Common-Modules**: Ortak tip ve API fonksiyonlarını kullanır
+   ```typescript
+   import { Content, Package, createContent } from 'onlyvips-common';
+   ```
 
-## 📊 İçerik Yönetimi Özellikleri
+2. **Backend API**: API endpoint'leri ile veri alışverişi yapar
 
-- **Birden Çok Medya Türü**: Fotoğraf, video, ses ve metin içerikleri
-- **Premium Fiyatlandırma**: İçerik başına özel fiyatlandırma
-- **Zamanlanmış Yayın**: İçerikleri belirli bir tarihte otomatik yayınlama
-- **İçerik Etiketleme**: Kategorilendirme ve etiketleme sistemi
-- **İstatistik Takibi**: Her içerik için detaylı görüntüleme ve etkileşim analitiği
+3. **Flirt-Bot**: Telegram üzerinden yönlendirme entegrasyonu
 
-## 🔐 VIP Paket Yönetimi
+## 📊 Analitik Özellikleri
 
-- **Özel Paket Oluşturma**: Farklı süreler ve fiyatlar için paket oluşturma
-- **Avantaj Tanımlama**: Her pakete özel avantajlar belirleme
-- **Abonelik İstatistikleri**: Paket bazlı abonelik analitiği
-- **Aktif/Pasif Yapma**: Paketleri satışa açma veya kapatma özelliği
+Analitik paneli, şovcuların içerik performansını izlemeleri için aşağıdaki verileri sunar:
 
-## 📈 Analitik ve İstatistikler
+```typescript
+import { Chart } from 'chart.js/auto';
+import { getAnalytics } from 'onlyvips-common';
 
-Şovcu Panel, kapsamlı analitik ve performans izleme sunar:
+// İçerik performans grafiği oluşturma
+const renderAnalytics = async () => {
+  const { viewsData } = await getAnalytics(contentId);
+  
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: viewsData.map(d => d.date),
+      datasets: [{
+        label: 'Görüntülenme',
+        data: viewsData.map(d => d.views)
+      }]
+    }
+  });
+};
+```
 
-- **Görüntülenme İstatistikleri**: İçerik bazında görüntülenme sayıları
-- **Abone Grafiği**: Zaman içinde abone sayısındaki değişimler
-- **Gelir Analizi**: Kazanç kaynakları ve toplam gelir
-- **Etkileşim Oranları**: Beğeni, yorum ve paylaşım istatistikleri
-- **Demografik Veriler**: Abone yaş, cinsiyet ve konum bilgileri
+## 🖼️ İçerik Yönetimi
 
-## 🔒 Güvenlik
+İçerik oluşturma ve düzenleme için örnek:
 
-- **JWT Token Kimlik Doğrulama**: Güvenli API erişimi için JWT kullanımı
-- **Telegram Kimlik Doğrulama**: MiniApp üzerinden otomatik kimlik doğrulama
-- **Role Dayalı Erişim**: Sadece doğrulanmış şovcular erişebilir
-- **Güvenli İçerik Saklama**: İçerikler için güvenli depolama ve erişim yönetimi
-- **HTTPS**: Tüm iletişim için şifreli bağlantı
+```typescript
+import { createContent } from 'onlyvips-common';
 
-## 🌐 Telegram MiniApp Yapılandırması
+// Yeni içerik oluşturma
+const handleSubmit = async (values) => {
+  try {
+    const result = await createContent({
+      title: values.title,
+      description: values.description,
+      mediaUrl: uploadedFileUrl,
+      mediaType: values.mediaType,
+      contentCategory: values.category,
+      isPremium: values.isPremium,
+      price: values.isPremium ? values.price : 0
+    });
+    
+    message.success('İçerik başarıyla oluşturuldu');
+    navigate(`/content/${result.content._id}`);
+  } catch (error) {
+    message.error('İçerik oluşturma başarısız');
+  }
+};
+```
 
-1. BotFather'a giderek bir bot oluşturun
-2. `/newapp` komutuyla yeni bir web uygulaması oluşturun
-3. MiniApp URL'ini projenizin dağıtıldığı URL olarak ayarlayın
-4. Bot üzerinden `/start` komutu ile MiniApp'e erişin
+## 🧪 Test
 
-## 📋 Deployment Kontrol Listesi
+```bash
+# Root dizinde
+yarn workspace showcu-panel test
 
-- [ ] `.env` dosyası düzgün yapılandırıldı
-- [ ] Telegram Bot yapılandırması tamamlandı
-- [ ] API endpoint'leri test edildi
-- [ ] TON cüzdan adresi yapılandırıldı
-- [ ] Buildpack static hosting için optimize edildi
-- [ ] HTTPS sertifikası kuruldu
-- [ ] Tüm medya türleri test edildi
-- [ ] Responsive tasarım tüm cihazlarda kontrol edildi
+# Veya showcu-panel dizininde
+yarn test
+```
 
-## 🔍 Sorun Giderme
+## 🔄 Build ve Dağıtım
 
-- **"API bağlantı hatası"**: API URL'inin doğru olduğundan emin olun
-- **"Yükleme yapılamıyor"**: Medya sunucusuna erişim olduğunu kontrol edin
-- **"TON bağlantısı kurulamıyor"**: TON cüzdan adresinin doğru olduğunu kontrol edin
-- **"Kimlik doğrulama hatası"**: JWT token'ının geçerli olduğunu kontrol edin
+```bash
+# Build
+yarn workspace showcu-panel build
 
-## 📝 Lisans
+# Önizleme
+yarn workspace showcu-panel preview
+```
 
-Tüm hakları saklıdır. SiyahKare tarafından geliştirilmiştir.
+Dağıtım için build klasörü `showcu-panel/dist` dizininde oluşturulur.
 
-## 🔗 İlgili Projeler
+## 📄 Lisans
 
-- [OnlyVips MiniApp](https://github.com/yourusername/onlyvips-miniapp) - Telegram MiniApp
-- [OnlyVips Backend](https://github.com/yourusername/onlyvips-backend) - Backend API
-- [OnlyVips Flirt Bot](https://github.com/yourusername/onlyvips-flirt-bot) - Telegram Bot
+© 2024 SiyahKare. Tüm hakları saklıdır.

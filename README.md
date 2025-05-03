@@ -1,4 +1,3 @@
-
 # 🌟 OnlyVips - Telegram Tabanlı Premium İçerik Platformu
 
 OnlyVips, Telegram ekosistemi içinde çalışan, içerik üreticileri ve kullanıcıları bir araya getiren kapsamlı bir premium içerik platformudur. Star ekonomisi ve görev sistemi üzerine kurulu olan bu platform, içerik üreticilerine içeriklerini monetize etme, kullanıcılara ise kaliteli içeriklere erişim imkanı sağlar.
@@ -337,3 +336,235 @@ Projeyi canlı ortama almadan önce şu kontrolleri yapın:
 **OnlyVips v0.7.0** - İçerik ekosistemi tamamlandı, TON ödemeleri entegre edildi.
 
 *Bu belge, OnlyVips projesinin genel bakışını sağlamaktadır. Bileşen özelinde daha detaylı bilgiler için ilgili bileşenlerin README dosyalarını inceleyebilirsiniz.*
+
+# OnlyVips Monorepo
+
+OnlyVips, Telegram tabanlı bir premium içerik platformudur. Bu monorepo projesi, platform için gerekli tüm bileşenleri içerir.
+
+## 📚 İçindekiler
+
+- [Genel Bakış](#genel-bakış)
+- [Proje Yapısı](#proje-yapısı)
+- [Başlarken](#başlarken)
+- [Geliştirme](#geliştirme)
+- [Güvenli Secret Yönetimi](#güvenli-secret-yönetimi)
+- [CI/CD](#cicd)
+- [Lisans](#lisans)
+
+## 🔍 Genel Bakış
+
+OnlyVips, içerik üreticilerinin Telegram üzerinden premium içeriklerini paylaşabilmelerine olanak tanıyan bir platformdur. Proje aşağıdaki bileşenlerden oluşur:
+
+- **MiniApp**: Telegram içi mini uygulama
+- **Şovcu Panel**: İçerik üreticileri için yönetim paneli
+- **Backend API**: RESTful API sunucusu
+- **Flirt Bot**: Telegram bot entegrasyonu
+- **Common Modules**: Paylaşılan TypeScript modülleri
+
+## 📁 Proje Yapısı
+
+```
+OnlyVips/
+├── miniapp/              # Telegram Mini App (React)
+├── showcu-panel/         # İçerik üretici paneli (React)
+├── backend-api/          # Backend API sunucusu (FastAPI)
+├── flirt-bot/            # Telegram bot uygulaması (Python)
+├── common-modules/       # Paylaşılan TypeScript modülleri
+├── docker-config/        # Docker yapılandırması
+├── .github/              # GitHub CI/CD workflow'ları
+├── package.json          # Monorepo yapılandırması
+└── pyproject.toml        # Python paket yapılandırması
+```
+
+## 🚀 Başlarken
+
+### Gereksinimler
+
+- Node.js 16+
+- Python 3.9+
+- Yarn
+- Poetry
+
+### Kurulum
+
+1. Depoyu klonlayın:
+
+```bash
+git clone https://github.com/SiyahKare/OnlyVips.git
+cd OnlyVips
+```
+
+2. Bağımlılıkları yükleyin:
+
+```bash
+# JavaScript bağımlılıkları
+yarn install
+
+# Python bağımlılıkları
+poetry install
+```
+
+## 💻 Geliştirme
+
+### Ortam değişkenlerini yapılandırma
+
+Proje artık HashiCorp Vault, AWS SSM Parameter Store ve çevresel değişkenler olmak üzere üç farklı secret yönetim kaynağını desteklemektedir. Yerel geliştirme için şunları yapabilirsiniz:
+
+1. `.env.example` dosyasını her alt projenin kök dizinine `.env` olarak kopyalayın
+2. `.env` dosyalarını düzenleyerek gerekli değişkenleri ekleyin
+
+### Bileşenleri Başlatma
+
+```bash
+# Backend API'yi başlat
+yarn start:backend
+
+# MiniApp'i başlat
+yarn start:miniapp
+
+# Şovcu Panel'i başlat
+yarn start:panel
+
+# Flirt Bot'u başlat
+yarn start:bot
+```
+
+## 🔐 Güvenli Secret Yönetimi
+
+OnlyVips, secret değerlerini güvenli bir şekilde yönetmek için artık aşağıdaki seçenekleri sunmaktadır:
+
+### 1. HashiCorp Vault Entegrasyonu
+
+HashiCorp Vault, secret değerlerini güvenli bir şekilde depolamak ve yönetmek için kullanılır.
+
+#### Kurulum ve Yapılandırma
+
+1. Vault sunucusunu kurun (üretimde örn. AWS, GCP veya kendi sunucunuzda çalıştırabilirsiniz)
+2. Secret değerlerini Vault'a yükleyin:
+
+```bash
+# Vault'a giriş yap
+vault login
+
+# Secret engine'i etkinleştir (eğer etkin değilse)
+vault secrets enable -path=secret kv-v2
+
+# Secret değerlerini yükle
+vault kv put secret/onlyvips \
+    JWT_SECRET="secure-jwt-secret" \
+    TELEGRAM_API_ID="your-api-id" \
+    TELEGRAM_API_HASH="your-api-hash" \
+    TELEGRAM_BOT_TOKEN="your-bot-token" \
+    # ... diğer secretler ...
+```
+
+3. Backend ve bot yapılandırmasını güncelleyin:
+
+```bash
+# .env dosyasında
+SECRET_PROVIDER=vault
+VAULT_URL=https://your-vault-server:8200
+VAULT_TOKEN=your-vault-token
+VAULT_PATH=onlyvips  # Secret path
+VAULT_MOUNT=secret   # Mount point
+```
+
+### 2. AWS SSM Parameter Store Entegrasyonu
+
+AWS SSM Parameter Store, AWS ortamında güvenli bir şekilde secret değerlerini saklamak için idealdir.
+
+#### Kurulum ve Yapılandırma
+
+1. Secret değerlerini AWS SSM'ye ekleyin:
+
+```bash
+# AWS CLI ile parametre ekle
+aws ssm put-parameter \
+    --name "/onlyvips/JWT_SECRET" \
+    --value "secure-jwt-secret" \
+    --type "SecureString"
+
+aws ssm put-parameter \
+    --name "/onlyvips/TELEGRAM_API_ID" \
+    --value "your-api-id" \
+    --type "SecureString"
+    
+# ... diğer parametreler için tekrarlayın ...
+```
+
+2. Uygulamanın yapılandırmasını AWS SSM kullanacak şekilde güncelleyin:
+
+```bash
+# .env dosyasında
+SECRET_PROVIDER=aws_ssm
+SSM_PREFIX=/onlyvips
+AWS_REGION=eu-west-1  # Bölgenizi belirtin
+```
+
+3. AWS kimlik bilgilerini IAM rol veya ortam değişkenleri ile sağlayın.
+
+### 3. Vercel için Secret Yönetimi
+
+Frontend projelerimiz için, `.env` dosyaları yerine Vercel'in dahili secret yönetimini kullanın:
+
+```bash
+# Vercel CLI ile secret ekle
+vercel secrets add JWT_SECRET secure-jwt-secret
+
+# Vercel projesinde secret'ı kullanma
+vercel env add VITE_API_URL production
+```
+
+Vercel Dashboard'dan da secret'ları ekleyebilir ve düzenleyebilirsiniz.
+
+### Üretim Ortamında Secret Ekleme Adımları
+
+1. **Yeni bir secret eklerken:**
+
+   a. Önce secret'ı güvenli depolama sistemine ekleyin (Vault veya AWS SSM)
+   b. CI/CD pipeline'ında gerekli environment variable'ı tanımlayın
+   c. Kod tabanında referansı ekleyin
+
+2. **AWS SSM'ye yeni bir secret ekleme:**
+
+```bash
+aws ssm put-parameter \
+    --name "/onlyvips/NEW_SECRET" \
+    --value "new-secret-value" \
+    --type "SecureString" \
+    --description "New secret for OnlyVips"
+```
+
+3. **Vault'a yeni bir secret ekleme:**
+
+```bash
+vault kv patch secret/onlyvips NEW_SECRET="new-secret-value"
+```
+
+4. **GitHub Actions'a secret ekleme:**
+
+   GitHub repository > Settings > Secrets > Actions > New repository secret
+
+   ```
+   Name: NEW_SECRET
+   Value: new-secret-value
+   ```
+
+## 🔄 CI/CD
+
+CI/CD pipeline'ı GitHub Actions ile yönetilir ve aşağıdaki aşamaları içerir:
+
+- Linting ve test
+- E2E testleri (Playwright)
+- Build ve dağıtım
+- Docker image oluşturma
+
+Daha fazla bilgi için [CI/CD Dokümantasyonu](.github/README-CI-CD.md) bölümüne bakın.
+
+## 📄 Lisans
+
+Bu proje [MIT lisansı](LICENSE) altında lisanslanmıştır.
+
+---
+
+© 2024 SiyahKare. Tüm hakları saklıdır.
