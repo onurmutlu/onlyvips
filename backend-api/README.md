@@ -1,6 +1,136 @@
-# OnlyVips Backend API
+# OnlyVips Backend API | v0.8.0
 
-OnlyVips platformunun ana API servisidir. Tüm bileşenler (MiniApp, Şovcu Panel ve Flirt-Bot) bu API ile iletişim kurar.
+OnlyVips ekosisteminin ana backend API bileşenidir. Kullanıcı yönetimi, içerik servisi, görev takibi, ödeme işlemleri ve yapay zeka entegrasyonlarını sağlar.
+
+## Geliştirme Durumu
+
+### Tamamlanan Bileşenler ✅
+
+- **Ana API Yapısı**: FastAPI tabanlı ana mimari kurulumu
+- **Temel Endpoint'ler**: Kullanıcı, içerik ve görev endpoint'leri
+- **Görev Yönetimi**: Görev oluşturma, listeleme, tamamlama ve doğrulama
+- **Metrik ve Loglama**: API kullanım metrikleri
+- **Kimlik Doğrulama**: JWT tabanlı yetkilendirme sistemi 
+- **CORS Desteği**: Crossorigin istekleri için CORS desteği
+- **Yapay Zeka API'leri**: GPT entegrasyonu için endpoint'ler
+- **Veritabanı Entegrasyonu**: MongoDB desteği ve veritabanı soyutlama katmanı
+- **Rol Tabanlı Yetkilendirme**: Farklı kullanıcı rolleri ve izin sistemi
+- **Telegram Auth**: Telegram ile kimlik doğrulama entegrasyonu
+- **API Key Auth**: Servisler arası iletişim için API Key doğrulama sistemi
+
+### Yeni Eklenen Özellikler (v0.8.0) 🔥
+
+- **Veritabanı Soyutlama**: `DatabaseInterface` üzerinden çoklu veritabanı desteği
+- **MongoDB Entegrasyonu**: Üretim için MongoDB desteği (MemoryDB'den geçiş)
+- **JWT Token Sistemi**: Gelişmiş JWT tabanlı kimlik doğrulama
+- **Rol ve İzin Sistemi**: Detaylı yetkilendirme mekanizması
+- **Telegram Auth Entegrasyonu**: Telegram ile seamless kimlik doğrulama
+- **Docker Entegrasyonu**: Geliştirme ve üretim için Docker yapılandırması
+- **Kullanıcı Profil Sistemi**: Kullanıcı profillerinin yönetimi
+
+### Görev Sistemi Özellikleri 🚀
+
+Tüm gerekli görev tipleri için endpoint'ler eklendi:
+
+1. **Görev Listeleme**: Tüm mevcut görevleri getirme 
+2. **Kullanıcı Görevleri**: Belirli bir kullanıcının görevlerini ve durumlarını getirme
+3. **Görev Tamamlama**: Kullanıcıların görev tamamlamasını bildirme
+4. **Görev Doğrulama**: Bot veya admin tarafından görev doğrulama 
+5. **Bekleyen Görevler**: Admin panel için doğrulama bekleyen görevleri listeleme
+6. **Günlük Limit Sıfırlama**: Görevlerin günlük deneme limitlerini sıfırlama
+7. **Rozet Atama**: Kullanıcılara rozet atama
+
+### Desteklenen Görev Tipleri 📋
+
+- `start_command`: Telegram botunu başlatma görevi
+- `join_channel`: Telegram kanalına katılma görevi 
+- `emoji_reaction`: Kanaldaki mesaja emoji tepkisi verme
+- `group_join_message`: Gruba katılıp mesaj gönderme
+- `inline_button_click`: Inline butona tıklama
+- `forward_message`: Mesaj iletme
+- `button_click`: Buton tıklama
+- `voting`: Ankete katılma
+- `schedule_post`: Zamanlanmış mesaj
+
+## Entegrasyonlar 🔌
+
+- **Flirt-Bot**: Bot görev doğrulama ve bildirim sistemi
+- **MiniApp**: Telegram MiniApp için API erişimi 
+- **Showcu Panel**: Yönetim paneli ile entegrasyon
+- **MongoDB**: Veritabanı entegrasyonu
+- **JWT**: Kimlik doğrulama için JWT entegrasyonu
+
+## Veritabanı Desteği 🗄️
+
+API aşağıdaki veritabanı sağlayıcılarını destekler:
+
+1. **Memory Database**: Geliştirme için bellek içi veritabanı (varsayılan)
+2. **MongoDB**: Üretim ortamı için MongoDB desteği
+
+Veritabanı sağlayıcısını `.env` dosyasında ayarlayabilirsiniz:
+
+```env
+# Memory DB kullanmak için
+DB_PROVIDER=memory
+
+# MongoDB kullanmak için
+DB_PROVIDER=mongodb
+DB_HOST=localhost
+DB_PORT=27017
+DB_USER=onlyvips
+DB_PASSWORD=your_secure_password
+DB_NAME=onlyvips
+```
+
+## Kimlik Doğrulama ve Yetkilendirme 🔐
+
+Backend API, aşağıdaki kimlik doğrulama yöntemlerini destekler:
+
+1. **JWT Token**: Kullanıcı kimlik doğrulaması için
+2. **API Key**: Servisler arası iletişim için
+3. **Telegram Auth**: Telegram kullanıcıları için doğrulama
+
+Rol tabanlı yetkilendirme sistemi aşağıdaki rolleri içerir:
+
+- `admin`: Tüm izinlere sahip
+- `showcu`: İçerik ve paket yönetimi
+- `moderator`: İçerik ve görev doğrulama
+- `user`: Standart kullanıcı
+- `system`: Sistem servisleri
+
+## Yapılacak İşler 🔍
+
+1. **API Dokümantasyonu**: Daha kapsamlı API dokümantasyonu
+2. **Test Kapsamı**: Endpoint'ler için birim ve entegrasyon testleri
+3. **Rate Limiting**: Hız sınırlama mekanizması
+4. **Görev Filtreleme**: Kullanıcıya özel görev filtreleme ve önceliklendirme 
+
+## Kurulum ve Çalıştırma 🔧
+
+```bash
+# Bağımlılıkları yükle
+pip install -r requirements.txt
+
+# Uygulamayı çalıştır
+uvicorn main:app --reload
+```
+
+## API Dokümantasyonu 📚
+
+API dokümantasyonuna aşağıdaki URL'lerden erişilebilir:
+
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+## Docker ile Çalıştırma 🐳
+
+```bash
+# Docker image oluştur
+docker build -t onlyvips-backend-api .
+
+# Container başlat
+docker run -p 8000:8000 --env-file .env onlyvips-backend-api
+```
 
 ## 🚀 Özellikler
 
@@ -13,11 +143,11 @@ OnlyVips platformunun ana API servisidir. Tüm bileşenler (MiniApp, Şovcu Pane
 
 ## 🛠️ Teknolojiler
 
-- **Node.js** ve **Express**: API framework
-- **TypeScript**: Tip güvenliği
+- **FastAPI**: API framework
+- **Pydantic**: Veri doğrulama
 - **MongoDB**: Veritabanı
 - **JWT**: Kimlik doğrulama
-- **TON API**: Blockchain entegrasyonu
+- **Docker**: Konteynerizasyon
 
 ## 📋 Monorepo'da Kullanım
 

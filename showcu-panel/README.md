@@ -1,6 +1,19 @@
-# Şovcu Panel
+# Şovcu Panel | v0.8.0
 
 OnlyVips platformunun içerik üreticileri için tasarlanmış kontrol paneli. İçerik yönetimi, VIP paket oluşturma ve analitik takibi için kullanılır.
+
+## 🌟 Güncellemeler (v0.8.0)
+
+Bu sürümde aşağıdaki önemli güncellemeler ve geliştirmeler yapılmıştır:
+
+- **Backend API Entegrasyonu**: Gerçek veritabanı ve API ile tam entegrasyon
+- **TON Connect 2.0**: Gelişmiş blockchain cüzdan bağlantısı ve ödeme sistemi
+- **İçerik Yönetim Araçları**: Zenginleştirilmiş içerik oluşturma ve düzenleme özellikleri
+- **Analitik Paneli**: Detaylı kullanıcı ve içerik istatistikleri
+- **UX/UI İyileştirmeleri**: Daha modern ve kullanıcı dostu arayüz
+- **Ödeme Yönetimi**: Otomatik para çekme ve işlem takibi
+- **Çoklu Medya Desteği**: Fotoğraf, video ve ses dosyaları için gelişmiş destek
+- **Abonelik Raporları**: Gelişmiş abone izleme ve raporlama
 
 ## 🚀 Özellikler
 
@@ -19,6 +32,8 @@ OnlyVips platformunun içerik üreticileri için tasarlanmış kontrol paneli. �
 - **Ant Design**: UI komponent kütüphanesi
 - **UnoCSS**: Atomik CSS framework
 - **TON Connect**: Blockchain cüzdan entegrasyonu
+- **Chart.js**: İstatistik ve grafik görselleştirme
+- **React Query**: API veri yönetimi ve önbellek
 
 ## 📋 Monorepo'da Kullanım
 
@@ -58,6 +73,7 @@ yarn workspace showcu-panel build
    VITE_API_URL=http://localhost:8000
    VITE_TON_NETWORK=testnet
    VITE_TG_WEB_APP_VERSION=6.9
+   VITE_MEDIA_URL=http://localhost:8000/media
    ```
 
 4. Geliştirme sunucusunu başlatın:
@@ -106,6 +122,55 @@ showcu-panel/
 - **Cüzdan**: Gelir ve TON para çekme işlemleri
 - **Profil**: Profil ayarları ve yapılandırma
 
+## 💎 TON Connect Entegrasyonu
+
+Şovcu Panel, TON blockchain ile entegre çalışarak güvenli ödeme işlemleri sağlar:
+
+```typescript
+// TON Connect entegrasyonu
+import { TonConnectUI } from '@tonconnect/ui';
+
+// TON cüzdan bağlantısı
+const tonConnectUI = new TonConnectUI({
+  manifestUrl: 'https://showcu-panel.onlyvips.com/tonconnect-manifest.json',
+  buttonRootId: 'ton-connect-button'
+});
+
+// Cüzdan bağlandığında
+tonConnectUI.onStatusChange(wallet => {
+  if (wallet) {
+    // Cüzdan bilgilerini kaydet
+    setWalletAddress(wallet.account.address);
+    
+    // Bakiye kontrolü
+    fetchBalance(wallet.account.address);
+  }
+});
+
+// Para çekme işlemi
+const withdrawFunds = async (amount) => {
+  try {
+    const result = await tonConnectUI.sendTransaction({
+      validUntil: Math.floor(Date.now() / 1000) + 360,
+      messages: [
+        {
+          address: destinationAddress,
+          amount: toNano(amount).toString(),
+        }
+      ]
+    });
+    
+    // İşlem sonucunu API'ye bildir
+    await api.saveTransaction(result.boc);
+    
+    return result;
+  } catch (error) {
+    console.error('Para çekme işlemi başarısız:', error);
+    throw error;
+  }
+};
+```
+
 ## 🔄 Monorepo Entegrasyonu
 
 Bu uygulama, monorepo yapısındaki diğer bileşenlerle aşağıdaki şekilde entegre olur:
@@ -141,34 +206,6 @@ const renderAnalytics = async () => {
       }]
     }
   });
-};
-```
-
-## 🖼️ İçerik Yönetimi
-
-İçerik oluşturma ve düzenleme için örnek:
-
-```typescript
-import { createContent } from 'onlyvips-common';
-
-// Yeni içerik oluşturma
-const handleSubmit = async (values) => {
-  try {
-    const result = await createContent({
-      title: values.title,
-      description: values.description,
-      mediaUrl: uploadedFileUrl,
-      mediaType: values.mediaType,
-      contentCategory: values.category,
-      isPremium: values.isPremium,
-      price: values.isPremium ? values.price : 0
-    });
-    
-    message.success('İçerik başarıyla oluşturuldu');
-    navigate(`/content/${result.content._id}`);
-  } catch (error) {
-    message.error('İçerik oluşturma başarısız');
-  }
 };
 ```
 

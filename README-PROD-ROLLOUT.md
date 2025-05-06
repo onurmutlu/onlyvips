@@ -1,4 +1,4 @@
-# OnlyVips Production Rollout Planı
+# OnlyVips Production Rollout Planı | v0.8.0
 
 Bu doküman, OnlyVips platformunun production ortamına güvenli ve verimli bir şekilde dağıtımı için adımları, stratejileri ve en iyi uygulamaları açıklar.
 
@@ -9,6 +9,7 @@ Bu doküman, OnlyVips platformunun production ortamına güvenli ve verimli bir 
 3. [Smoke Test Procedürü](#smoke-test-prosedürü)
 4. [Hızlı Deployment Rehberi](#hızlı-deployment-rehberi)
 5. [İzleme ve Alerting](#i̇zleme-ve-alerting)
+6. [Versiyon 0.8.0 Dağıtım Notları](#versiyon-080-dağıtım-notları)
 
 ## Canary Release Stratejisi
 
@@ -123,6 +124,55 @@ Deployment sonrası temel fonksiyonaliteyi doğrulamak için smoke testleri çal
 - Slack kanalı: #onlyvips-alerts
 - On-call rotasyonu: Trello board'da tanımlanmıştır
 - Escalation prosedürü: PagerDuty üzerinden yönetilir
+
+## Versiyon 0.8.0 Dağıtım Notları
+
+### Önemli Değişiklikler
+
+- **Veritabanı Geçişi**: Artık bellek tabanlı veritabanı yerine MongoDB kullanılmaktadır
+- **JWT Auth Sistemi**: Yeni kimlik doğrulama sistemi aktif edildi
+- **MongoDB Bağlantı Kontrolü**: Veritabanı bağlantı hataları durumunda otomatik bellek moduna geçiş eklendi
+
+### Dağıtım Adımları
+
+1. **Veritabanı Ön Hazırlık**:
+   ```bash
+   # MongoDB hazırlığı
+   ./scripts/prepare-mongodb.sh
+   ```
+
+2. **Çevresel Değişkenler**:
+   ```
+   # Tüm bileşenlerde .env dosyalarını güncelle
+   DB_PROVIDER=mongodb
+   DB_HOST=your-mongodb-host
+   DB_PORT=27017
+   DB_USER=your-user
+   DB_PASSWORD=your-password
+   DB_NAME=onlyvips
+   ```
+
+3. **Sıralı Dağıtım**:
+   ```bash
+   # Önce veritabanı ve backend
+   ./scripts/deploy-backend.sh
+   
+   # Sonra bot ve frontend
+   ./scripts/deploy-frontend.sh
+   ```
+
+4. **Veri Doğrulama**:
+   ```bash
+   # Veritabanı ve API doğrulaması
+   ./scripts/validate-deployment.sh
+   ```
+
+### Güvenlik Notları
+
+- JWT SECRET_KEY değerlerinin güvenli bir şekilde yönetildiğinden emin olun
+- API anahtarları için güçlü değerler kullanın
+- CORS ayarlarını üretim ortamına uygun sıkılaştırın
+- Tüm veritabanı bağlantılarının SSL ile şifrelendiğini doğrulayın
 
 ## Ek Kaynaklar
 

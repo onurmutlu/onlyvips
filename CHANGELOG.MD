@@ -1,4 +1,3 @@
-
 # OnlyVips Değişiklik Günlüğü
 
 Bu belge, OnlyVips projesinde yapılan önemli değişiklikleri kronolojik olarak detaylandırmaktadır.
@@ -12,6 +11,42 @@ OnlyVips projesi, [Semantik Versiyonlama](https://semver.org/lang/tr/) kurallar�
 - **PATCH (YAMA)**: Geriye dönük uyumlu hata düzeltmeleri
 
 ## 📋 Sürümler
+
+### [0.8.0] - 8 Şubat 2024
+
+#### ✨ Eklenen
+
+- Backend API için veritabanı entegrasyonu tamamlandı
+- DatabaseInterface ile farklı veritabanı sağlayıcıları için ortak arayüz geliştirildi
+- MemoryDatabase ve MongoDBDatabase implementasyonları oluşturuldu
+- JWT tabanlı kimlik doğrulama, rol ve izin tabanlı yetkilendirme sistemi eklendi
+- Telegram ile kimlik doğrulama entegrasyonu tamamlandı
+- API key doğrulama sistemi eklendi
+- MiniApp için Vercel Secrets yönetimi ve dağıtım sistemi eklendi
+- Şovcu Panel için TON Connect 2.0 entegrasyonu geliştirildi
+- Backend API için production deployment ve canary release stratejisi oluşturuldu
+- Monorepo bileşenleri arasında veri paylaşımı için common-modules modülü geliştirildi
+
+#### 🔄 Değiştirilen
+
+- Dockerfile yapılandırmaları ve Docker Compose konfigürasyonları güncellendi
+- Görev yönetim sistemi daha modüler hale getirildi
+- FastAPI uygulaması başlatma ve CORS middleware yapılandırmaları iyileştirildi
+- MiniApp bileşenleri ve sayfa yapısı optimize edildi
+- API endpoint yapısı daha iyi belgelendirildi ve standardize edildi
+- Flirt-Bot görev doğrulamaları daha sağlam hale getirildi
+- Kubernetes ve Helm chart yapılandırmaları güncellendi
+- Tüm README dosyaları geliştirme talimatları ile zenginleştirildi
+
+#### 🐛 Düzeltilen
+
+- Veritabanı bağlantı hataları ve timeout sorunları çözüldü
+- JWT token yönetimi ve doğrulama hatası giderildi
+- Task API entegrasyonundaki veri tipleri iyileştirildi
+- MongoDB indeks oluşturma hataları düzeltildi
+- API erişim kontrolü güvenlik açıkları kapatıldı
+- TON cüzdan entegrasyonundaki işlem doğrulama sorunu çözüldü
+- Kanal doğrulama hatası giderildi
 
 ### [Yayımlanmamış]
 
