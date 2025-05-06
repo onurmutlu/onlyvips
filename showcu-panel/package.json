@@ -34,7 +34,7 @@
     "@unocss/preset-uno": "^0.56.0",
     "@vitejs/plugin-react": "^4.2.0",
     "eslint": "^8.53.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.4",
     "typescript": "^5.2.2",
     "unocss": "^0.56.0",
