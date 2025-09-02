@@ -29,7 +29,7 @@
     "@types/react-dom": "^18.2.15",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
-    "@unocss/preset-attributify": "^0.56.0",
+    "@unocss/preset-attributify": "^66.5.0",
     "@unocss/preset-icons": "^0.56.0",
     "@unocss/preset-uno": "^0.56.0",
     "@vitejs/plugin-react": "^4.2.0",
