@@ -22,6 +22,16 @@ from .task_types.deeplink_track_task import DeeplinkTrackTask
 from .task_types.group_join_task import GroupJoinTask
 from .task_types.join_channel_task import JoinChannelTask
 from .task_types.message_task import MessageTask
+from .task_types.message_send_task import MessageSendTask
+from .task_types.channel_join_task import ChannelJoinTask
+from .task_types.button_click_task import ButtonClickTask
+from .task_types.start_link_task import StartLinkTask
+from .task_types.voting_task import VotingTask
+from .task_types.schedule_post_task import SchedulePostTask
+from .task_types.comment_task import CommentTask
+from .task_types.follow_account_task import FollowAccountTask
+from .task_types.emoji_reaction_task import EmojiReactionTask
+from .task_types.group_join_message_task import GroupJoinMessageTask
 
 from .base_task import BaseTask
 
@@ -57,7 +67,17 @@ class TaskManager:
             "link": DeeplinkTrackTask,
             "group_join": GroupJoinTask,
             "channel_join": JoinChannelTask,
-            "message": MessageTask
+            "message": MessageTask,
+            "message_send": MessageSendTask,
+            "channel_join_v2": ChannelJoinTask,
+            "button_click": ButtonClickTask,
+            "start_link": StartLinkTask,
+            "voting": VotingTask,
+            "schedule_post": SchedulePostTask,
+            "comment": CommentTask,
+            "follow_account": FollowAccountTask,
+            "emoji_reaction": EmojiReactionTask,
+            "group_join_message": GroupJoinMessageTask
         }
         
         # Görev süre aşımı kontrol döngüsü

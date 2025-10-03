@@ -1,0 +1,61 @@
+{
+  "issue_patterns": [
+    {
+      "pattern": "\\[\\s*[xX]\\s*\\]\\s*(.+?)\\s*(?:\\[([\\w-]+?)\\])?\\s*(?:#([\\w-]+?))?\\s*$",
+      "label_mapping": {
+        "bug": "bug",
+        "feat": "enhancement",
+        "feature": "enhancement",
+        "refactor": "refactor",
+        "test": "testing",
+        "doc": "documentation",
+        "docs": "documentation"
+      },
+      "default_label": "task"
+    },
+    {
+      "pattern": "- \\[ \\]\\s*(.+?)\\s*(?:\\[([\\w-]+?)\\])?\\s*(?:#([\\w-]+?))?\\s*$",
+      "label_mapping": {
+        "bug": "bug",
+        "feat": "enhancement",
+        "feature": "enhancement",
+        "refactor": "refactor",
+        "test": "testing",
+        "doc": "documentation",
+        "docs": "documentation"
+      },
+      "default_label": "task"
+    }
+  ],
+  "file_patterns": {
+    "README.md": {
+      "section_patterns": [
+        "## Yapılacak İşler",
+        "## TODO",
+        "## Yapacaklarımız",
+        "## Backlog"
+      ]
+    },
+    "ROADMAP.MD": {
+      "section_patterns": [
+        "## Aşama \\d+",
+        "### Aşama \\d+"
+      ]
+    },
+    "TODO.md": {
+      "process_entire_file": true
+    }
+  },
+  "ignore_patterns": [
+    "\\[x\\]\\s*Tamamlandı",
+    "\\[x\\]\\s*Completed"
+  ],
+  "labels": [
+    {"name": "bug", "color": "d73a4a", "description": "Düzeltilmesi gereken sorun"},
+    {"name": "enhancement", "color": "a2eeef", "description": "Yeni özellik veya iyileştirme"},
+    {"name": "documentation", "color": "0075ca", "description": "Dokümantasyon geliştirmesi"},
+    {"name": "refactor", "color": "fbca04", "description": "Kod yeniden düzenleme çalışması"},
+    {"name": "testing", "color": "0e8a16", "description": "Test geliştirme çalışması"},
+    {"name": "task", "color": "bfdadc", "description": "Genel görev"}
+  ]
+} 

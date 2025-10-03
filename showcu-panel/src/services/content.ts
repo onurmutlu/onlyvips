@@ -10,6 +10,7 @@ export interface Content {
   price: number;
   createdAt: Date;
   updatedAt: Date;
+  requiredTaskId?: string;
 }
 
 export interface CreateContentData {
@@ -19,6 +20,7 @@ export interface CreateContentData {
   mediaType: 'image' | 'video';
   isPremium: boolean;
   price: number;
+  requiredTaskId?: string;
 }
 
 export const contentService = {

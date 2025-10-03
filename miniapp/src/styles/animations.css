@@ -1,0 +1,55 @@
+/* Seviye Atlama Animasyonu */
+@keyframes levelUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.05);
+  }
+  40% {
+    transform: translateY(0) scale(1);
+  }
+  70% {
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-15px) scale(0.95);
+  }
+}
+
+.animate-levelup {
+  animation: levelUp 3s ease-in-out forwards;
+}
+
+/* XP Kazanımı Animasyonu */
+@keyframes xpPulse {
+  0% { 
+    opacity: 0.6; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.05);
+  }
+  100% { 
+    opacity: 0.6; 
+    transform: scale(1);
+  }
+}
+
+.animate-xp-pulse {
+  animation: xpPulse 1.2s infinite;
+}
+
+/* Progress Bar Dolum Animasyonu */
+@keyframes fillProgress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.animate-fill-progress {
+  animation: fillProgress 1s ease-out forwards;
+} 

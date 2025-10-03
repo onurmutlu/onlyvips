@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Modal, Form, Input, Select, Upload, Button, message } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Modal, Form, Input, Select, Upload, Button, message, Divider, Tooltip } from 'antd';
+import { UploadOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { contentService } from '../../services/content';
+import { taskService } from '../../services/task';
 
 interface ContentModalProps {
   visible: boolean;
@@ -19,6 +20,30 @@ const ContentModal: React.FC<ContentModalProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+
+  // Görevleri yükle
+  useEffect(() => {
+    if (visible) {
+      loadTasks();
+    }
+  }, [visible]);
+
+  const loadTasks = async () => {
+    setTasksLoading(true);
+    try {
+      const tasks = await taskService.getAll();
+      // Sadece aktif görevleri filtrele
+      const activeTasks = tasks.filter(task => task.isActive);
+      setTasks(activeTasks);
+    } catch (error) {
+      console.error('Görevler yüklenirken hata oluştu:', error);
+      message.error('Görevler yüklenemedi');
+    } finally {
+      setTasksLoading(false);
+    }
+  };
 
   const handleSubmit = async (values: any) => {
     setLoading(true);
@@ -116,6 +141,33 @@ const ContentModal: React.FC<ContentModalProps> = ({
             min={0}
             className="bg-gray-700 border-gray-600 text-white"
           />
+        </Form.Item>
+
+        <Divider className="border-gray-600" />
+        
+        <Form.Item 
+          name="requiredTaskId" 
+          label={
+            <span>
+              İçerik Erişim Görevi 
+              <Tooltip title="Bu içeriği görmek için kullanıcıların tamamlaması gereken görevi seçin. Eğer hiçbir görev seçilmezse, içerik normal şartlarda (ücretli/ücretsiz) erişilebilir olacaktır.">
+                <QuestionCircleOutlined className="ml-1" />
+              </Tooltip>
+            </span>
+          }
+        >
+          <Select 
+            className="bg-gray-700 border-gray-600 text-white"
+            placeholder="Gerekli görev seçin (opsiyonel)"
+            loading={tasksLoading}
+            allowClear
+          >
+            {tasks.map(task => (
+              <Select.Option key={task.id} value={task.id}>
+                {task.title} ({task.reward} Token)
+              </Select.Option>
+            ))}
+          </Select>
         </Form.Item>
 
         <Form.Item>

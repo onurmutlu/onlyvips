@@ -1,0 +1,173 @@
+/* TaskForm Stilleri */
+.task-form {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+}
+
+.task-form h2 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  color: #1f1f1f;
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.task-form .form-group {
+  margin-bottom: 20px;
+}
+
+.task-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #444;
+}
+
+.task-form input,
+.task-form select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+}
+
+.task-form input:focus,
+.task-form select:focus {
+  border-color: #5e81ac;
+  outline: none;
+}
+
+.task-form input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.task-form input::-webkit-outer-spin-button,
+.task-form input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.task-form .form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 32px;
+  gap: 16px;
+}
+
+.task-form button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+}
+
+.task-form .cancel-button {
+  background-color: #f2f2f2;
+  color: #444;
+}
+
+.task-form .cancel-button:hover {
+  background-color: #eaeaea;
+}
+
+.task-form .submit-button {
+  background-color: #5e81ac;
+  color: white;
+}
+
+.task-form .submit-button:hover {
+  background-color: #516a8b;
+}
+
+.task-form .submit-button:disabled {
+  background-color: #97a9bf;
+  cursor: not-allowed;
+}
+
+.task-form .error-message {
+  padding: 12px;
+  margin-bottom: 20px;
+  background-color: #fbecec;
+  border-left: 4px solid #e53935;
+  color: #c62828;
+  border-radius: 4px;
+}
+
+/* TaskForm Overlay */
+.task-form-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.task-form-container {
+  max-width: 90%;
+  width: 500px;
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Görevler Sekme Stili */
+.creator-tasks {
+  padding: 20px;
+}
+
+.creator-tasks h2 {
+  margin-bottom: 20px;
+}
+
+.creator-tasks .create-task-btn {
+  background-color: #5e81ac;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background-color 0.2s;
+}
+
+.creator-tasks .create-task-btn:hover {
+  background-color: #516a8b;
+}
+
+.tasks-list {
+  margin-top: 20px;
+}
+
+.no-tasks {
+  color: #888;
+  text-align: center;
+  padding: 30px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+} 

@@ -1,115 +1,151 @@
-import os
-import secrets
-from functools import lru_cache
-from typing import Any, Dict, List, Optional
+"""
+Yapılandırma Ayarları
+"""
 
+import os
+from typing import List, Dict, Any, Optional, Union, ClassVar
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
-from app.core.secrets_provider import get_secret_provider, SecretBackendType
 
 class Settings(BaseSettings):
-    """Uygulama yapılandırma ayarları"""
-    
-    # Secrets backend yapılandırması
-    SECRET_PROVIDER: str = os.getenv("SECRET_PROVIDER", SecretBackendType.ENV)
-    
-    # API temel ayarları
+    """
+    Uygulama ayarları sınıfı
+    """
+    # API ayarları
     API_V1_STR: str = "/api"
-    SECRET_KEY: str = ""
+    PROJECT_NAME: str = "OnlyVips API"
+    API_DEBUG: bool = True
+    
+    # Güvenlik
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "gizli-anahtar-burada-saklanir")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 gün
-    ENV: str = os.getenv("NODE_ENV", "development")
     
-    # Telgram ayarları
-    TELEGRAM_API_ID: str = ""
-    TELEGRAM_API_HASH: str = ""
-    TELEGRAM_BOT_TOKEN: str = ""
+    # Rate Limiting
+    RATE_LIMIT_ENABLED: bool = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "100"))
     
-    # Veritabanı ayarları
-    DATABASE_URL: str = ""
+    # Input Validation
+    INPUT_VALIDATION_ENABLED: bool = os.getenv("INPUT_VALIDATION_ENABLED", "true").lower() == "true"
     
-    # Dosya yükleme ayarları
-    MAX_FILE_SIZE: int = 100 * 1024 * 1024  # 100 MB
-    UPLOAD_DIRECTORY: str = ""
-    ALLOWED_FILE_TYPES: List[str] = ["image/jpeg", "image/png", "video/mp4", "application/pdf"]
+    # JWT Security
+    JWT_ROTATION_ENABLED: bool = os.getenv("JWT_ROTATION_ENABLED", "true").lower() == "true"
+    
+    # API Keys
+    FLIRT_BOT_API_KEY: str = os.getenv("FLIRT_BOT_API_KEY", "flirtbot-secret-api-key-12345")
+    SHOWCU_PANEL_API_KEY: str = os.getenv("SHOWCU_PANEL_API_KEY", "showcupanel-secret-api-key-67890")
+    MINIAPP_API_KEY: str = os.getenv("MINIAPP_API_KEY", "miniapp-secret-api-key-abcde")
     
     # CORS ayarları
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",  # Showcu Panel geliştirme ortamı
-        "http://localhost:5173",  # Admin Panel geliştirme ortamı
-        "https://onlyvips.com",   # Prodüksiyon ortamı
-        "https://admin.onlyvips.com",
-        "https://showcu.onlyvips.com",
-    ]
+    CORS_ORIGINS: List[str] = ["*"]
     
-    # TON blockchain ayarları
-    TON_API_KEY: str = ""
-    TON_WALLET_ADDRESS: str = ""
+    # Veritabanı
+    DB_PROVIDER: str = os.getenv("DB_PROVIDER", "memory")  # memory, mongodb, postgresql
+    DB_HOST: str = os.getenv("DB_HOST", "localhost")
+    DB_PORT: int = int(os.getenv("DB_PORT", "27017"))
+    DB_USER: Optional[str] = os.getenv("DB_USER")
+    DB_PASSWORD: Optional[str] = os.getenv("DB_PASSWORD")
+    DB_NAME: str = os.getenv("DB_NAME", "onlyvips")
+    DB_URL: Optional[str] = os.getenv("DB_URL")
     
-    # OpenAI API ayarları
-    OPENAI_API_KEY: str = ""
-    OPENAI_MODEL: str = ""
+    # Telgram Bot 
+    BOT_TOKEN: Optional[str] = os.getenv("BOT_TOKEN")
+    BOT_WEBHOOK_URL: Optional[str] = os.getenv("BOT_WEBHOOK_URL")
     
-    # Admin panel yapılandırması
-    ADMIN_EMAIL: str = ""
-    ADMIN_PASSWORD: str = ""
+    # Redis (önbellek, kuyruk, rate limiting)
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD")
     
-    # Log ayarları
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
+    # Entegrasyon noktaları
+    FLIRT_BOT_API_URL: str = os.getenv("FLIRT_BOT_API_URL", "http://localhost:8001/api")
+    SHOWCU_PANEL_API_URL: str = os.getenv("SHOWCU_PANEL_API_URL", "http://localhost:8002/api")
+    MINIAPP_API_URL: str = os.getenv("MINIAPP_API_URL", "http://localhost:8003/api")
+    
+    # Yapay Zeka
+    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
+    OPENAI_ORG_ID: Optional[str] = os.getenv("OPENAI_ORG_ID")
+    
+    # Loglama
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_JSON: bool = os.getenv("LOG_JSON", "false").lower() == "true"
+    
+    # Uygulama modu
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    
+    # Görev sistemi
+    TASK_CONFIG_PATH: str = os.getenv("TASK_CONFIG_PATH", "app/config/tasks.json")
+    TASK_AUTO_VERIFY: bool = os.getenv("TASK_AUTO_VERIFY", "false").lower() == "true"
+    
+    @field_validator("CORS_ORIGINS", mode="before")
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
     
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
-        
-        @classmethod
-        def customise_sources(
-            cls,
-            init_settings,
-            env_settings,
-            file_secret_settings,
-        ):
-            # Secret provider'ı kullanarak değerleri doldurma mekanizması ekleniyor
-            def secrets_backend_settings(settings_cls) -> Dict[str, Any]:
-                provider = get_secret_provider(os.getenv("SECRET_PROVIDER"))
-                secrets_dict = {}
-                for field in settings_cls.__fields__.values():
-                    field_value = provider.get_secret(field.name)
-                    if field_value is not None:
-                        secrets_dict[field.name] = field_value
-                return secrets_dict
-                
-            # Normal Pydantic sources'den önce kendi özel kaynağımızı ekle
-            return (
-                init_settings,
-                secrets_backend_settings,  # Bizim eklediğimiz kaynak
-                env_settings,
-                file_secret_settings,
-            )
 
-@lru_cache()
-def get_settings() -> Settings:
-    """Singleton Settings nesnesi döndürür"""
-    settings = Settings()
-    
-    # Boş olan değerleri varsayılanlarla doldur
-    if not settings.SECRET_KEY:
-        settings.SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
-    
-    if not settings.DATABASE_URL:
-        settings.DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./onlyvips.db")
-    
-    if not settings.UPLOAD_DIRECTORY:
-        settings.UPLOAD_DIRECTORY = os.getenv("UPLOAD_DIR", "./uploads")
-        
-    if not settings.OPENAI_MODEL:
-        settings.OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo-instruct")
-        
-    if not settings.ADMIN_EMAIL:
-        settings.ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@onlyvips.com")
-        
-    if not settings.ADMIN_PASSWORD:
-        settings.ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme")
-    
-    return settings
 
-settings = get_settings() 
+# Ayarlar nesnesi
+settings = Settings()
+
+# Ortam değişkenleri doğrulama ve yapılandırma özeti
+def setup_config() -> None:
+    """
+    Yapılandırmayı doğrula ve özetle
+    """
+    env_mode = {
+        "development": "GELİŞTİRME MODU ⚙️",
+        "production": "ÜRETİM MODU 🚀",
+        "test": "TEST MODU 🧪"
+    }.get(settings.ENVIRONMENT, "BİLİNMEYEN MOD ❓")
+    
+    db_mode = {
+        "memory": "BELLEK MODU (veriler kalıcı değil) ⚠️",
+        "mongodb": "MongoDB VERİTABANI 🗄️",
+        "postgresql": "PostgreSQL VERİTABANI 🗄️"
+    }.get(settings.DB_PROVIDER, "BİLİNMEYEN VERİTABANI ❓")
+    
+    config_summary = f"""
+    ===============================================
+    🌟 OnlyVips API v1.0 - {env_mode}
+    ===============================================
+    🔄 API Yolu: {settings.API_V1_STR}
+    📊 Veritabanı: {db_mode}
+    🔒 CORS Origin: {', '.join(settings.CORS_ORIGINS) if isinstance(settings.CORS_ORIGINS, list) else settings.CORS_ORIGINS}
+    📝 Log Level: {settings.LOG_LEVEL}
+    ===============================================
+    """
+    
+    print(config_summary)
+    
+    # Eksiklik ve uyarı kontrolü
+    if settings.DB_PROVIDER != "memory" and not settings.DB_URL and not (settings.DB_HOST and settings.DB_USER):
+        print("⚠️ UYARI: Veritabanı bilgileri eksik (DB_URL veya DB_HOST+DB_USER gerekli)")
+    
+    if settings.ENVIRONMENT == "production" and settings.API_DEBUG:
+        print("⚠️ UYARI: Üretim modunda debug modu açık bırakılmış!")
+    
+    if settings.CORS_ORIGINS == ["*"] and settings.ENVIRONMENT == "production":
+        print("⚠️ UYARI: Üretim modunda tüm kaynaklar CORS için izin veriliyor!")
+    
+    if settings.SECRET_KEY == "gizli-anahtar-burada-saklanir":
+        print("⚠️ UYARI: Varsayılan SECRET_KEY kullanılıyor. Güvenli bir anahtar belirleyin!")
+    
+    if settings.ENVIRONMENT == "production":
+        if any([
+            settings.FLIRT_BOT_API_KEY == "flirtbot-secret-api-key-12345",
+            settings.SHOWCU_PANEL_API_KEY == "showcupanel-secret-api-key-67890",
+            settings.MINIAPP_API_KEY == "miniapp-secret-api-key-abcde"
+        ]):
+            print("⚠️ UYARI: Üretim modunda varsayılan API anahtarları kullanılıyor!")
+
+# Ortam değerlerini başlatma
+if __name__ == "__main__":
+    setup_config() 

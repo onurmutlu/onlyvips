@@ -1,7 +1,30 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-interface ContentCardProps {
+// İçerik tipi tanımı
+interface Content {
+  id: string;
+  title: string;
+  thumbnail: string;
+  creatorName: string;
+  creatorId: string;
+  creatorAvatar: string;
+  price?: number;
+  isPremium: boolean;
+  likes: number;
+  category: string;
+  previewText?: string;
+}
+
+// Props tipi tanımı - Content nesnesini direkt olarak kabul eder
+interface ContentCardPropsWithObject {
+  content: Content;
+  isSubscribed?: boolean;
+  onClick?: (id: string) => void;
+}
+
+// Props tipi tanımı - Ayrı ayrı prop olarak kabul eder
+interface ContentCardPropsWithFields {
   id: string;
   title: string;
   thumbnail: string;
@@ -17,21 +40,44 @@ interface ContentCardProps {
   onClick?: (id: string) => void;
 }
 
-const ContentCard: React.FC<ContentCardProps> = ({
-  id,
-  title,
-  thumbnail,
-  creatorName,
-  creatorId,
-  creatorAvatar,
-  price,
-  isPremium,
-  likes,
-  category,
-  previewText,
-  isSubscribed = false,
-  onClick
-}) => {
+// Birleştirilmiş props tipi - iki formdan birini kabul edebilir
+type ContentCardProps = ContentCardPropsWithObject | ContentCardPropsWithFields;
+
+// Hangi prop tipinin verildiğini belirlemek için tip koruması
+function isContentCardPropsWithObject(props: ContentCardProps): props is ContentCardPropsWithObject {
+  return (props as ContentCardPropsWithObject).content !== undefined;
+}
+
+const ContentCard: React.FC<ContentCardProps> = (props) => {
+  // Props tipi belirleme ve değişkenleri ayıklama
+  let id: string,
+      title: string,
+      thumbnail: string,
+      creatorName: string,
+      creatorId: string,
+      creatorAvatar: string,
+      isPremium: boolean,
+      likes: number,
+      category: string,
+      price: number | undefined,
+      previewText: string | undefined,
+      isSubscribed: boolean = false,
+      onClick: ((id: string) => void) | undefined;
+  
+  if (isContentCardPropsWithObject(props)) {
+    ({ 
+      id, title, thumbnail, creatorName, creatorId, creatorAvatar, 
+      isPremium, likes, category, price, previewText 
+    } = props.content);
+    isSubscribed = props.isSubscribed || false;
+    onClick = props.onClick;
+  } else {
+    ({
+      id, title, thumbnail, creatorName, creatorId, creatorAvatar,
+      isPremium, likes, category, price, previewText, isSubscribed = false, onClick
+    } = props);
+  }
+
   // Kategori ikonları
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
@@ -139,4 +185,4 @@ const ContentCard: React.FC<ContentCardProps> = ({
   );
 };
 
-export default ContentCard; 
+export default ContentCard;

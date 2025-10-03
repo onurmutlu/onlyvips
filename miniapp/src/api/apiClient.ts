@@ -64,8 +64,68 @@ const apiCall = async (endpoint: string, method: string = 'GET', data: any = nul
   }
 };
 
+// Telegram WebApp verilerinden kullanıcı bilgilerini çıkar ve güvenli payload oluştur
+const extractUserDataFromTelegram = () => {
+  try {
+    // Telegram WebApp verilerine eriş
+    const tg = window.Telegram?.WebApp;
+    
+    if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+      console.warn('Telegram WebApp kullanıcı bilgisi bulunamadı');
+      return null;
+    }
+    
+    const user = tg.initDataUnsafe.user;
+    
+    // Temel kullanıcı bilgilerini çıkar
+    const userData = {
+      userId: user.id ? String(user.id) : '',
+      firstName: user.first_name || '',
+      lastName: user.last_name || '',
+      username: user.username || '',
+      photoUrl: user.photo_url || '',
+      languageCode: tg.initDataUnsafe.user.language_code || 'tr',
+      isPremium: !!user.is_premium
+    };
+    
+    // initData string'ini de ekle (backend'de doğrulama için)
+    const initData = tg.initData;
+    
+    return {
+      userData,
+      initData
+    };
+  } catch (error) {
+    console.error('Telegram kullanıcı bilgileri çıkarılırken hata:', error);
+    return null;
+  }
+};
+
 // API istemcisi
 const api = {
+  // Oturum İşlemleri
+  auth: {
+    // Telegram WebApp verilerini kullanarak oturum başlat
+    initSession: async () => {
+      const telegramData = extractUserDataFromTelegram();
+      
+      if (!telegramData) {
+        return {
+          success: false,
+          status: 0,
+          error: 'Telegram kullanıcı verileri alınamadı',
+          data: null
+        };
+      }
+      
+      // Backend'e güvenli bir şekilde kullanıcı bilgilerini gönder
+      return apiCall('/auth/init-session', 'POST', {
+        telegramUserData: telegramData.userData,
+        telegramInitData: telegramData.initData
+      });
+    }
+  },
+  
   // İçerik İşlemleri
   content: {
     // Kategorileri getir
@@ -120,7 +180,19 @@ const api = {
     
     // Şovcu ara
     search: (query: string) => 
-      apiCall(`/creators/search?q=${encodeURIComponent(query)}`)
+      apiCall(`/creators/search?q=${encodeURIComponent(query)}`),
+      
+    // Görev oluştur
+    createTask: (creatorId: string, taskData: any) =>
+      apiCall(`/creators/${creatorId}/tasks`, 'POST', taskData),
+      
+    // Görev tamamlayanları getir
+    getTaskCompletions: (creatorId: string, taskId: string) =>
+      apiCall(`/creators/${creatorId}/tasks/${taskId}/completions`),
+      
+    // Görev detaylarını getir
+    getTaskById: (taskId: string) =>
+      apiCall(`/tasks/${taskId}`)
   },
   
   // Kullanıcı İşlemleri
@@ -143,7 +215,15 @@ const api = {
     
     // Kullanıcı adını güncelle 
     updateUsername: (userId: string, username: string) => 
-      apiCall(`/users/${userId}/profile`, 'PATCH', { username })
+      apiCall(`/users/${userId}/profile`, 'PATCH', { username }),
+      
+    // Kullanıcının görev durumunu kontrol et
+    getTaskStatus: (userId: string, taskId: string) =>
+      apiCall(`/users/${userId}/tasks/${taskId}/status`),
+      
+    // Görevi tamamla
+    completeTask: (userId: string, taskId: string) =>
+      apiCall(`/users/${userId}/tasks/${taskId}/complete`, 'POST')
   },
   
   // Paket İşlemleri
@@ -180,6 +260,21 @@ const api = {
     
     // Ödeme durumunu kontrol et
     checkStatus: (paymentId: string) => apiCall(`/payments/status/${paymentId}`)
+  },
+  
+  // Rozet İşlemleri
+  badges: {
+    // Kullanıcı rozetlerini getir
+    getUserBadges: (userId: string) => 
+      apiCall(`/badges/user/${userId}`),
+    
+    // İçerik açtığında rozet kazan
+    unlockContentBadge: (userId: string, contentId: string) => 
+      apiCall(`/badges/unlock/content`, 'POST', { userId, contentId }),
+    
+    // Rozeti NFT'ye dönüştür
+    mintBadge: (badgeId: string, userId: string) => 
+      apiCall(`/badges/mint`, 'POST', { badgeId, userId })
   }
 };
 

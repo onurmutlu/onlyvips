@@ -1,0 +1,7 @@
+2025-05-06 19:40:09 [INFO] onlyvips-api: Bellek tabanlı veritabanı kullanılıyor (veriler kalıcı değil)
+2025-05-06 19:41:02 [INFO] onlyvips-api: Bellek tabanlı veritabanı kullanılıyor (veriler kalıcı değil)
+2025-05-06 19:41:11 [INFO] onlyvips-api: 🚀 OnlyVips Backend API başlatılıyor...
+2025-05-06 19:41:11 [INFO] onlyvips-api: Bellek veritabanı kullanılıyor, tablo oluşturmaya gerek yok
+2025-05-06 19:41:11 [INFO] onlyvips-api: ✅ Veritabanı tabloları hazır
+2025-05-06 19:41:11 [INFO] onlyvips-api: 📌 API Dokümantasyonu: /api/docs
+2025-05-06 19:41:11 [INFO] onlyvips-api: ✅ Uygulama başarıyla başlatıldı!

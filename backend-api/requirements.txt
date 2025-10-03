@@ -14,6 +14,31 @@ pymongo>=4.6.0
 motor>=3.3.0
 pillow>=10.0.0
 telethon>=1.29.2
+
+# Güvenlik ve performans paketleri
+redis>=5.0.0  # Rate limiting ve caching
+PyJWT>=2.8.0  # JWT token işlemleri
+cryptography>=41.0.0  # Şifreleme işlemleri
+bcrypt>=4.0.0  # Password hashing
+slowapi>=0.1.9  # Rate limiting
+python-multipart>=0.0.6  # Form data handling
+
+# Monitoring ve logging
+prometheus-client>=0.17.0  # Metrics
+structlog>=23.1.0  # Structured logging
+sentry-sdk[fastapi]>=1.32.0  # Error tracking
+
+# Validation ve güvenlik
+email-validator>=2.0.0  # Email validation
+phonenumbers>=8.13.0  # Phone number validation
+bleach>=6.0.0  # HTML sanitization
+
 # Secret backend entegrasyonları
 hvac>=1.2.0  # HashiCorp Vault
 boto3>=1.28.0  # AWS SSM Parameter Store
+
+# Test ve development
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+httpx>=0.24.0  # Test client

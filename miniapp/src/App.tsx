@@ -1,13 +1,75 @@
 import { useEffect, useState } from "react";
+import api from "./api/apiClient";
+import StatusBar from "./components/StatusBar";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import { useUserStore } from "./stores/userStore";
+import TaskDetail from "./pages/TaskDetail";
+import TokenHistory from "./pages/TokenHistory";
+import BadgePage from "./pages/BadgePage";
+import { checkAndCompleteReferralTask } from "./services/taskService";
+import './styles/index.css';
 
-export default function App() {
+// Tip tanımlamaları
+interface Task {
+  id: number;
+  title: string;
+  reward: string;
+  verification_type?: string;
+  verification_required?: boolean;
+}
+
+interface UserProfile {
+  id: string;
+  username?: string;
+  xp?: number;
+  tokens?: number;
+  badges?: string[];
+  completed_tasks?: number[];
+  pending_tasks?: number[];
+}
+
+interface TelegramUser {
+  id: string | number;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  photo_url?: string;
+}
+
+// Telegram window tipini tanımla
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        ready: () => void;
+        expand: () => void;
+        initDataUnsafe?: {
+          user?: {
+            id: number | string;
+            username?: string;
+            first_name?: string;
+            last_name?: string;
+            photo_url?: string;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Ana Sayfa Bileşeni
+const Home = () => {
   const [uid, setUid] = useState("demo123"); // fallback UID
-  const [telegramUserData, setTelegramUserData] = useState(null);
-  const [viralTasks, setViralTasks] = useState([]);
+  const [telegramUserData, setTelegramUserData] = useState<TelegramUser | null>(null);
+  const [viralTasks, setViralTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState("tasks"); // "tasks" veya "profile"
-  const [pendingTasks, setPendingTasks] = useState([]);
+  const [pendingTasks, setPendingTasks] = useState<number[]>([]);
+  const [sessionInitialized, setSessionInitialized] = useState(false);
+  
+  // Zustand store'dan user state fonksiyonlarını al
+  const { setUserInfo, earnTokens, gainXP } = useUserStore();
   
   // API'den görevleri çek
   const fetchTasks = async () => {
@@ -46,10 +108,10 @@ export default function App() {
   };
   
   // Görev tamamla fonksiyonu 
-  const completeTask = async (taskId) => {
+  const completeTask = async (taskId: number) => {
     try {
       // Kullanıcı doğrulama verilerini hazırla
-      const verificationData = {};
+      const verificationData: Record<string, any> = {};
       
       // Görev tipine göre ek veriler ekle
       const task = viralTasks.find(t => t.id === taskId);
@@ -117,64 +179,105 @@ export default function App() {
     }
   };
   
+  // Uygulama oturumunu başlat
+  const initializeSession = async () => {
+    try {
+      const response = await api.auth.initSession();
+      
+      if (response.success) {
+        console.log("✅ Oturum başarıyla başlatıldı");
+        setSessionInitialized(true);
+        
+        // Kullanıcı bilgilerini ayarla
+        if (response.data?.user) {
+          setUserProfile(response.data.user);
+          setUid(response.data.user.id);
+          
+          // Zustand store'a kullanıcı bilgilerini aktar
+          setUserInfo({
+            telegramId: response.data.user.id,
+            username: response.data.user.username || response.data.user.displayName,
+            fullName: response.data.user.fullName || response.data.user.displayName
+          });
+          
+          // XP ve token bilgilerini ayarla (varsa)
+          if (response.data.user.xp) gainXP(response.data.user.xp);
+          if (response.data.user.tokens) earnTokens(response.data.user.tokens);
+        }
+        
+        // Telegram verilerini ayarla
+        const tg = window.Telegram?.WebApp;
+        if (tg && tg.initDataUnsafe?.user) {
+          setTelegramUserData(tg.initDataUnsafe.user as TelegramUser);
+          
+          // Ek kullanıcı bilgilerini zustand'a aktar
+          if (tg.initDataUnsafe.user.photo_url) {
+            setUserInfo({
+              photoUrl: tg.initDataUnsafe.user.photo_url
+            });
+          }
+          
+          // Referral kontrol et ve tamamla
+          if (response.data?.user?.id) {
+            checkAndCompleteReferralTask(response.data.user.id)
+              .then(completed => {
+                if (completed) {
+                  console.log("✅ Referral görevi otomatik olarak tamamlandı");
+                  fetchUserProfile(); // Kullanıcı bilgilerini güncelle
+                }
+              })
+              .catch(err => {
+                console.error("❌ Referral görevi kontrolünde hata:", err);
+              });
+          }
+        }
+        
+        return true;
+      } else {
+        console.error("❌ Oturum başlatılamadı:", response.error);
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ Oturum başlatma hatası:", error);
+      return false;
+    }
+  };
+  
   useEffect(() => {
     if (typeof window !== "undefined" && window.Telegram && window.Telegram?.WebApp) {
-
       const tg = window.Telegram.WebApp;
       tg.ready();
       tg.expand();
-
-      const user = window.Telegram.WebApp.initDataUnsafe?.user;
-      if (user) {
-        console.log("✅ Telegram UID:", user.id);
-        setUid(user.id.toString());
-      } else {
-        console.warn("⚠️ Telegram initData gelmedi. Demo UID kullanılacak.");
-      }
-
-
-  
-      const telegramUser = tg.initDataUnsafe?.user;
-     
-      if (telegramUser) {
-        setTelegramUserData(telegramUser);
-        setUid(telegramUser.id.toString()); // UID string olarak kullanılır
-      } else {
-        console.warn("⚠️ Telegram initData gelmedi, demo123 kullanılacak.");
-      }
-      // Konumu backend'e gönder
-      if ("geolocation" in navigator && telegramUser?.id) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            fetch(import.meta.env.VITE_API_URL + "/location/report", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                user_id: telegramUser.id,
-                username: telegramUser.username,
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude
-              })
-            }).then(() => {
-              console.log("📍 Konum başarıyla gönderildi.");
-            });
-          },
-          (err) => console.warn("📍 Konum alınamadı:", err)
-        );
-      }
+      
+      // Oturumu başlat
+      initializeSession().then(success => {
+        if (!success) {
+          // Oturum başlatılamazsa fallback olarak eski yöntemi kullan
+          const user = tg.initDataUnsafe?.user;
+          if (user) {
+            console.log("✅ Telegram UID:", user.id);
+            setUid(String(user.id));
+            setTelegramUserData(user as TelegramUser);
+          } else {
+            console.warn("⚠️ Telegram initData gelmedi. Demo UID kullanılacak.");
+          }
+        }
+        
+        // Görevleri ve kullanıcı profilini çek
+        fetchTasks();
+        fetchUserProfile();
+      });
     } else {
       console.warn("🚫 Telegram WebApp context not available (muhtemelen tarayıcıda test ediyorsun)");
+      
+      // Görevleri ve kullanıcı profilini çek (demo modu)
+      fetchTasks();
+      fetchUserProfile();
     }
-    
-    // Görevleri ve kullanıcı profilini çek
-    fetchTasks();
-    fetchUserProfile();
-  }, [uid]);
+  }, []);
   
   // Tab değiştirme işlevi
-  const toggleTab = (tab) => {
+  const toggleTab = (tab: string) => {
     setActiveTab(tab);
     if (tab === "profile") {
       fetchUserProfile(); // Profil sekmesine geçince profil bilgilerini güncelle
@@ -182,7 +285,7 @@ export default function App() {
   };
   
   // Görev durumunu belirle (tamamlanmış, bekliyor, yapılmadı)
-  const getTaskStatus = (taskId) => {
+  const getTaskStatus = (taskId: number) => {
     if (!userProfile) return "incomplete";
     
     if (userProfile.completed_tasks?.includes(taskId)) {
@@ -197,7 +300,7 @@ export default function App() {
   };
   
   return (
-    <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white flex flex-col items-center p-6 font-sans overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white flex flex-col items-center p-6 pt-24 font-sans overflow-hidden">
       <h1 className="text-4xl font-bold mb-4 text-center text-gradient bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent animate-fade-in">
         🚀 OnlyVips Görev Merkezi
       </h1>
@@ -234,19 +337,19 @@ export default function App() {
                 const taskStatus = getTaskStatus(task.id);
                 
                 return (
-                  <div
+                  <Link
+                    to={`/task/${task.id}`}
                     key={idx}
-                    className={`bg-black/30 border border-white/10 rounded-xl p-4 shadow-sm animate-fade-in hover:scale-[1.01] transition-all duration-300 cursor-pointer relative ${
+                    className={`block bg-black/30 border border-white/10 rounded-xl p-4 shadow-sm animate-fade-in hover:scale-[1.01] transition-all duration-300 cursor-pointer relative ${
                       taskStatus === "completed" ? "border-emerald-500/50" : 
                       taskStatus === "pending" ? "border-yellow-500/50" : ""
                     }`}
-                    onClick={() => completeTask(task.id)}
                   >
                     <div className="text-white font-semibold">📌 {task.title}</div>
                     <div className="text-sm text-emerald-400">Ödül: {task.reward}</div>
                     
                     {taskStatus === "incomplete" && (
-                      <div className="text-xs text-gray-400 mt-2">Tamamlamak için tıkla 👆</div>
+                      <div className="text-xs text-gray-400 mt-2">Detaylar için tıkla 👆</div>
                     )}
                     
                     {/* Tamamlandı işareti */}
@@ -266,10 +369,10 @@ export default function App() {
                     {/* Doğrulama bilgisi */}
                     {task.verification_required && taskStatus === "incomplete" && (
                       <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
-                        <span>🔍</span> Doğrulama gerekir: {getVerificationText(task.verification_type)}
+                        <span>🔍</span> Doğrulama gerekir: {getVerificationText(task.verification_type || '')}
                       </div>
                     )}
-                  </div>
+                  </Link>
                 );
               })}
             </div>
@@ -314,11 +417,11 @@ export default function App() {
                 <div className="mt-3 h-2 bg-gray-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600"
-                    style={{width: `${(userProfile.xp % 100)}%`}}
+                    style={{width: `${(userProfile.xp || 0) % 100}%`}}
                   ></div>
                 </div>
                 <div className="mt-1 text-xs text-gray-400">
-                  Bir sonraki seviyeye: {100 - (userProfile.xp % 100)} XP
+                  Bir sonraki seviyeye: {100 - ((userProfile.xp || 0) % 100)} XP
                 </div>
               </div>
               
@@ -328,7 +431,7 @@ export default function App() {
                 
                 {userProfile.badges && userProfile.badges.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {userProfile.badges.map((badge, idx) => (
+                    {userProfile.badges.map((badge: string, idx: number) => (
                       <div key={idx} className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-xs px-3 py-1 rounded-full">
                         {badge}
                       </div>
@@ -344,13 +447,17 @@ export default function App() {
                 <div className="bg-black/30 border border-yellow-500/20 rounded-xl p-4">
                   <h3 className="text-md font-medium mb-2">⌛ Bekleyen Görevler</h3>
                   <div className="space-y-2">
-                    {pendingTasks.map((taskId) => {
+                    {pendingTasks.map((taskId: number) => {
                       const task = viralTasks.find(t => t.id === taskId);
                       return task ? (
-                        <div key={taskId} className="bg-black/20 rounded p-2 text-sm">
+                        <Link
+                          to={`/task/${taskId}`}
+                          key={taskId}
+                          className="block bg-black/20 rounded p-2 text-sm hover:bg-black/30 transition"
+                        >
                           <div className="font-medium">{task.title}</div>
                           <div className="text-xs text-yellow-400">Doğrulama bekleniyor...</div>
-                        </div>
+                        </Link>
                       ) : null;
                     })}
                   </div>
@@ -387,13 +494,33 @@ export default function App() {
         Görevleri tamamla, XP ve rozet kazan 💫<br />
         Star'lar sadece satın alınabilir ve VIP özelliklerde kullanılır.
       </footer>
-    </main>
+    </div>
+  );
+};
+
+export default function App() {
+  return (
+    <>
+      {/* Status Bar */}
+      <StatusBar />
+      
+      {/* Ana İçerik - StatusBar'ın altında kalması için padding eklendi */}
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/task/:taskId" element={<TaskDetail />} />
+          <Route path="/tokens" element={<TokenHistory />} />
+          <Route path="/badges" element={<BadgePage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </>
   );
 }
 
 // Doğrulama türünü anlaşılır metne çevir
-function getVerificationText(verificationType) {
-  const texts = {
+function getVerificationText(verificationType: string): string {
+  const texts: Record<string, string> = {
     "invite_tracker": "Davet bağlantısı takibi",
     "message_forward": "Mesaj yönlendirme kontrolü",
     "bot_mention": "Bot etiketleme kontrolü",

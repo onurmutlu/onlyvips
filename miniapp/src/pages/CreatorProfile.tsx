@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/apiClient';
 import ContentCard from '../components/ContentCard';
+import TaskForm from '../components/TaskForm';
+import '../styles/CreatorProfile.css';
 
 interface Creator {
   id: string;
@@ -62,14 +64,19 @@ const CreatorProfile: React.FC = () => {
   const [packages, setPackages] = useState<Package[]>([]);
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'content' | 'packages'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'packages' | 'tasks'>('content');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [userBalance, setUserBalance] = useState(0);
   const [subscribeModalOpen, setSubscribeModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [tasks, setTasks] = useState<any[]>([]); // Görevler listesi
   
   // Kullanıcı ID'sini al (gerçekte Telegram WebApp'ten alınacak)
   const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo-user';
+  
+  // Kullanıcı kendi profiline bakıyor mu?
+  const isOwnProfile = userId === creatorId;
   
   useEffect(() => {
     const loadCreatorData = async () => {
@@ -118,12 +125,26 @@ const CreatorProfile: React.FC = () => {
             setUserBalance(walletResponse.data.balance || 0);
           }
         }
+        
+        // Görev listesini al (eğer kendi profili ise)
+        if (isOwnProfile) {
+          // Gerçek API'da: const tasksResponse = await api.creators.getTasks(creatorId);
+          // if (tasksResponse.success && tasksResponse.data) {
+          //   setTasks(tasksResponse.data);
+          // }
+          
+          // Demo için
+          setTasks(getMockTasks());
+        }
       } catch (error) {
         console.error('Şovcu bilgileri yüklenirken hata oluştu:', error);
         // Demo için
         setCreator(getMockCreator());
         setContents(getMockContent());
         setPackages(getMockPackages());
+        if (isOwnProfile) {
+          setTasks(getMockTasks());
+        }
         setIsSubscribed(false);
         setUserBalance(150);
       } finally {
@@ -132,7 +153,7 @@ const CreatorProfile: React.FC = () => {
     };
     
     loadCreatorData();
-  }, [creatorId, userId]);
+  }, [creatorId, userId, isOwnProfile]);
   
   const handleContentClick = (contentId: string) => {
     navigate(`/content/${contentId}`);
@@ -167,6 +188,27 @@ const CreatorProfile: React.FC = () => {
       console.error('Abonelik hatası:', error);
       alert('❌ İşlem sırasında bir hata oluştu.');
     }
+  };
+  
+  // Görev oluşturma
+  const handleCreateTask = () => {
+    setShowTaskForm(true);
+  };
+  
+  const handleTaskSuccess = () => {
+    setShowTaskForm(false);
+    // Task oluşturulduktan sonra yapılacak işlemler
+    // Örneğin, görevleri yeniden yüklemek
+    alert('✅ Görev başarıyla oluşturuldu!');
+  };
+  
+  const handleTaskCancel = () => {
+    setShowTaskForm(false);
+  };
+  
+  // Görev detay sayfasına git
+  const handleTaskClick = (taskId: string) => {
+    navigate(`/creator/${creatorId}/task/${taskId}`);
   };
   
   // Demo için mock veriler
@@ -297,6 +339,53 @@ const CreatorProfile: React.FC = () => {
         ]
       }
     ];
+  };
+  
+  // Demo için mock görevler
+  const getMockTasks = () => {
+    return [
+      {
+        id: 'task1',
+        title: 'Instagram Hesabımı Takip Et',
+        taskType: 'follow',
+        reward: 25,
+        createdAt: '2023-08-15T10:30:00Z',
+        completionCount: 48,
+        isActive: true
+      },
+      {
+        id: 'task2',
+        title: 'Son Video İçeriğimi İzle',
+        taskType: 'watch',
+        reward: 15,
+        createdAt: '2023-08-12T14:20:00Z',
+        completionCount: 129,
+        isActive: true
+      },
+      {
+        id: 'task3',
+        title: 'Yorum Yap ve Sevdiğin Modelimi Paylaş',
+        taskType: 'message',
+        reward: 40,
+        createdAt: '2023-08-05T09:15:00Z',
+        completionCount: 17,
+        isActive: false
+      }
+    ];
+  };
+  
+  // Görev tipi bilgisi
+  const getTaskTypeInfo = (type: string) => {
+    switch (type) {
+      case 'follow':
+        return { label: 'Takip', icon: '👥' };
+      case 'message':
+        return { label: 'Mesaj', icon: '💬' };
+      case 'watch':
+        return { label: 'İzleme', icon: '👁️' };
+      default:
+        return { label: 'Görev', icon: '✅' };
+    }
   };
   
   if (loading) {
@@ -489,6 +578,18 @@ const CreatorProfile: React.FC = () => {
           >
             VIP Paketler
           </button>
+          {isOwnProfile && (
+            <button
+              className={`py-2 px-4 font-medium ${
+                activeTab === 'tasks'
+                  ? 'text-pink-500 border-b-2 border-pink-500'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              onClick={() => setActiveTab('tasks')}
+            >
+              Görevler
+            </button>
+          )}
         </div>
         
         {/* İçerik alanı */}
@@ -504,19 +605,8 @@ const CreatorProfile: React.FC = () => {
                   {contents.map(content => (
                     <ContentCard
                       key={content.id}
-                      id={content.id}
-                      title={content.title}
-                      thumbnail={content.thumbnail}
-                      creatorName={content.creatorName}
-                      creatorId={content.creatorId}
-                      creatorAvatar={content.creatorAvatar}
-                      price={content.price}
-                      isPremium={content.isPremium}
-                      likes={content.likes}
-                      category={content.category}
-                      previewText={content.previewText}
-                      isSubscribed={isSubscribed}
-                      onClick={handleContentClick}
+                      content={content}
+                      onClick={() => handleContentClick(content.id)}
                     />
                   ))}
                 </div>
@@ -595,6 +685,89 @@ const CreatorProfile: React.FC = () => {
                 ))}
               </div>
             </>
+          )}
+          
+          {activeTab === 'tasks' && isOwnProfile && (
+            <>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Görevlerim</h2>
+                <button 
+                  className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg font-medium text-sm"
+                  onClick={handleCreateTask}
+                >
+                  + Yeni Görev Oluştur
+                </button>
+              </div>
+              
+              {tasks.length > 0 ? (
+                <div className="space-y-4">
+                  {tasks.map(task => (
+                    <div 
+                      key={task.id}
+                      className="bg-gray-900/50 rounded-xl p-4 border border-gray-800 transition-all hover:border-pink-500/30 cursor-pointer"
+                      onClick={() => handleTaskClick(task.id)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <span className="text-lg mr-2">{getTaskTypeInfo(task.taskType).icon}</span>
+                            <span className="text-sm bg-gray-800 px-2 py-0.5 rounded-full">
+                              {getTaskTypeInfo(task.taskType).label}
+                            </span>
+                            {!task.isActive && (
+                              <span className="ml-2 text-xs bg-red-900/50 text-red-300 px-2 py-0.5 rounded-full">
+                                Pasif
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="font-medium text-lg">{task.title}</h3>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="text-center">
+                            <div className="text-amber-400 flex items-center">
+                              <span className="font-bold">{task.reward}</span>
+                              <span className="ml-1">★</span>
+                            </div>
+                            <div className="text-xs text-gray-400">Ödül</div>
+                          </div>
+                          <div className="text-center ml-4">
+                            <div className="font-bold">{task.completionCount}</div>
+                            <div className="text-xs text-gray-400">Tamamlayan</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center mt-3 text-sm text-gray-400">
+                        <div>
+                          {new Date(task.createdAt).toLocaleDateString('tr-TR')}
+                        </div>
+                        <div className="text-pink-400 hover:underline">
+                          Detayları Gör →
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-800">
+                  <div className="text-center py-8 text-gray-400">
+                    Henüz görev oluşturmadınız.
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+          
+          {/* Görev formu overlay */}
+          {showTaskForm && (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+              <div className="bg-gray-900 rounded-xl border border-gray-700 max-w-md w-full animate-fadeIn">
+                <TaskForm
+                  creatorId={creatorId || ''}
+                  onSuccess={handleTaskSuccess}
+                  onCancel={handleTaskCancel}
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>
