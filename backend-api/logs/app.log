@@ -5,3 +5,10 @@
 2025-05-06 19:41:11 [INFO] onlyvips-api: ✅ Veritabanı tabloları hazır
 2025-05-06 19:41:11 [INFO] onlyvips-api: 📌 API Dokümantasyonu: /api/docs
 2025-05-06 19:41:11 [INFO] onlyvips-api: ✅ Uygulama başarıyla başlatıldı!
+2025-10-03 21:01:48 [INFO] onlyvips-api: Bellek tabanlı veritabanı kullanılıyor (veriler kalıcı değil)
+2025-10-03 21:02:20 [INFO] onlyvips-api: Bellek tabanlı veritabanı kullanılıyor (veriler kalıcı değil)
+2025-10-03 21:02:35 [INFO] onlyvips-api: Bellek tabanlı veritabanı kullanılıyor (veriler kalıcı değil)
+2025-10-03 21:04:23 [INFO] onlyvips-api: Bellek tabanlı veritabanı kullanılıyor (veriler kalıcı değil)
+2025-10-03 21:04:43 [INFO] onlyvips-api: Bellek tabanlı veritabanı kullanılıyor (veriler kalıcı değil)
+2025-10-03 21:04:45 [INFO] onlyvips-api: Sentry DSN bulunamadı, error tracking devre dışı
+2025-10-03 21:06:01 [INFO] onlyvips-api: Bellek tabanlı veritabanı kullanılıyor (veriler kalıcı değil)

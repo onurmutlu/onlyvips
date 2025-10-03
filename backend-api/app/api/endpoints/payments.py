@@ -505,4 +505,4 @@ async def get_balance_summary(request = None):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch balance summary"
-        ) 
+        )
